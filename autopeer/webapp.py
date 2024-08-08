@@ -25,3 +25,10 @@ async def autopeer(peer_asn: int):
     Create or update a peering session with the given ASN.
     """
     return {"message": f"Autopeering with ASN {peer_asn}"}
+
+@app.delete("/autopeer")
+async def autopeer(peer_asn: int):
+    """
+    Delete peering session with the given ASN.
+    """
+    return {"message": f"Autopeering with ASN {peer_asn}"}
