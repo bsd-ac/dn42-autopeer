@@ -5,7 +5,9 @@ name = "pypi"
 
 [packages]
 autopeer = {file = "."}
+apscheduler = "*"
 fastapi = {extras = ["standard"], version = "*"}
+python-gnupg = "*"
 pyzmq = "*"
 
 [dev-packages]

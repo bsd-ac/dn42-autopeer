@@ -1,12 +1,14 @@
+import logging
 import os
 import sys
+
 import uvicorn
 import zmq
 import zmq.asyncio
-import logging
 
-from .import logger
+from . import logger
 from .webapp import app
+
 
 def main():
     # check if we are root, else quit

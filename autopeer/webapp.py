@@ -1,6 +1,8 @@
+from contextlib import asynccontextmanager
 from typing import Optional
 import uuid
 
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from fastapi import FastAPI, Query
 from pydantic import BaseModel
 
@@ -14,7 +16,20 @@ app_peer = FastAPI()
 app_peer.add_middleware(GPGMiddleware)
 app_peer.add_middleware(TokenMiddleware)
 
-app = FastAPI()
+scheduler = AsyncIOScheduler()
+
+@scheduler.scheduled_job("interval", seconds=5)
+async def clear_cache():
+    logger.debug("Clearing cache")
+    cache.clear()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    scheduler.start()
+    yield
+    scheduler.shutdown()
+
+app = FastAPI(lifespan=lifespan)
 app.mount("/login", app_login)
 app.mount("/peer", app_peer)
 
