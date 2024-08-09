@@ -1,34 +1,64 @@
-from fastapi import FastAPI
+from typing import Optional
+import uuid
+
+from fastapi import FastAPI, Query
+from pydantic import BaseModel
+
+from . import cache, logger
+from .middleware import GPGMiddleware, TokenMiddleware
+
+app_login = FastAPI()
+app_login.add_middleware(GPGMiddleware)
+
+app_peer = FastAPI()
+app_peer.add_middleware(GPGMiddleware)
+app_peer.add_middleware(TokenMiddleware)
 
 app = FastAPI()
+app.mount("/login", app_login)
+app.mount("/peer", app_peer)
+
+class PeerInfo(BaseModel):
+    ASN: int
+    peer_ip: Optional[str] = None
+    peer_pubkey: Optional[str] = None
+    peer_contact: Optional[str] = None
 
 
-@app.get("/")
-async def root():
+@app_login.post("/")
+async def autopeer_login(peer_info: PeerInfo):
     """
-    Hello World!
+    Login to the autopeering service.
+    Creates a new session token that is valid for one minute.
     """
-    return {"message": "Hello World!"}
+    token = uuid.uuid4()
+    cache[peer_info.ASN] = f"{token}"
+    return {"token": f"{token}"}
 
-
-@app.get("/autopeer")
-async def autopeer(peer_asn: int):
+@app_peer.post("/info")
+async def autopeer_get(peer_info: PeerInfo):
     """
     Get peering information for given ASN.
     """
-    return {"message": f"Autopeering with ASN {peer_asn}"}
+    return {"message": f"Autopeering with ASN {peer_info.ASN}"}
 
-
-@app.post("/autopeer")
-async def autopeer(peer_asn: int):
+@app_peer.post("/create")
+async def autopeer_create(peer_info: PeerInfo):
     """
-    Create or update a peering session with the given ASN.
+    Create a peering session with the given ASN.
     """
-    return {"message": f"Autopeering with ASN {peer_asn}"}
+    return {"message": f"Autopeering with ASN {peer_info.ASN}"}
 
-@app.delete("/autopeer")
-async def autopeer(peer_asn: int):
+@app_peer.put("/update")
+async def autopeer_update(peer_info: PeerInfo):
+    """
+    Update peering information for given ASN.
+    """
+    return {"message": f"Autopeering with ASN {peer_info.ASN}"}
+
+@app_peer.delete("/delete")
+async def autopeer_delete(peer_info: PeerInfo):
     """
     Delete peering session with the given ASN.
     """
-    return {"message": f"Autopeering with ASN {peer_asn}"}
+    return {"message": f"Autopeering with ASN {peer_info.ASN}"}
