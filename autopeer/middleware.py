@@ -1,4 +1,5 @@
 import base64
+import email.utils
 import json
 import subprocess
 import tempfile
@@ -11,6 +12,7 @@ from starlette.requests import Request
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from . import cache, logger
+from .utils import DN42
 
 
 class GPGMiddleware:
@@ -75,18 +77,50 @@ class GPGMiddleware:
             )
         logger.debug(f"Signature: {signature}")
 
-        # get GPG key of the ASN
+        # get the email of the ASN
+        mail = DN42.email(ASN)
+        if not mail:
+            raise HTTPException(status_code=400, detail="ASN not found")
+        logger.debug(f"Email: {mail}")
+
+        # get the public key of the ASN
+        # only searches for the key using WKD and local keyring
+        logger.debug("Getting public key")
+        sp = subprocess.run(["gpg", "--locate-keys", mail])
+        if sp.returncode != 0:
+            logger.warning(f"Error getting public key for: {mail}")
+
         try:
             with tempfile.NamedTemporaryFile() as tmpfile:
                 tmppath = tmpfile.name
                 tmpfile.write(signature)
                 tmpfile.flush()
                 verified = self.gpg.verify_data(tmppath, body)
-                logger.debug(f"Verified: {verified.valid}")
                 if not verified.valid:
                     raise HTTPException(
                         status_code=400, detail="Signature verification failed"
                     )
+                if len(verified.sig_info) > 1:
+                    raise HTTPException(
+                        status_code=400, detail="More than one signature found"
+                    )
+                logger.debug(f"Verified: {verified.sig_info}")
+                for sig, info in verified.sig_info.items():
+                    user = info["username"]
+                    try:
+                        user_info = email.utils.parseaddr(user)
+                    except Exception as e:
+                        logger.debug(f"Error parsing email: {e}")
+                        raise HTTPException(
+                            status_code=400, detail="Error parsing email"
+                        )
+                    logger.debug(f"Signature by: {user_info}")
+                    if user_info[1] != mail:
+                        raise HTTPException(
+                            status_code=401, detail="Signature by wrong user"
+                        )
+        except HTTPException:
+            raise
         except Exception as e:
             raise HTTPException(
                 status_code=400, detail=f"Error verifying signature: {e}"
