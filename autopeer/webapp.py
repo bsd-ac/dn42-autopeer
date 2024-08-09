@@ -1,9 +1,9 @@
+import uuid
 from contextlib import asynccontextmanager
 from typing import Optional
-import uuid
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from fastapi import FastAPI, Query
+from fastapi import FastAPI
 from pydantic import BaseModel
 
 from . import cache, logger

@@ -1,9 +1,9 @@
 import base64
 import json
-from os import system
 import subprocess
 import tempfile
 from functools import partial
+from os import system
 
 import gnupg
 from fastapi import HTTPException
