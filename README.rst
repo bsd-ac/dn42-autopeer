@@ -30,7 +30,7 @@ The signature is verified by fetching the GPG key for the email registered by th
 .. code:: bash
 
     $ cat request.json | gpg --sign --detach-sig - | base64 -w 0 > request.sig
-    $ curl -X POST -d @request.json \
+    $ curl -w '\n' -X POST -d @request.json \
         -H "Content-Type: application/json" \
         -H "X-DN42-Signature: $(cat request.sig)" \
         -H "X-DN42-ASN: 4242420000" \
