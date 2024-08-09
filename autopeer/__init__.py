@@ -6,7 +6,7 @@ logger: logging.Logger = logging.getLogger("autopeer")
 logger.setLevel(logging.DEBUG)
 
 formatter: logging.Formatter = logging.Formatter(
-    "%(asctime)s [%(levelname)s]\t%(name)s: %(message)s"
+    "%(asctime)s [%(levelname)s]\t%(name)s[%(process)d]: %(message)s"
 )
 
 syslog_handler: logging.handlers.SysLogHandler = logging.handlers.SysLogHandler(
