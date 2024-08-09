@@ -155,8 +155,6 @@ class TokenMiddleware:
         except KeyError:
             raise HTTPException(status_code=401, detail="ASN is not logged in")
         except Exception as e:
-            raise HTTPException(
-                status_code=400, detail=f"Error verifying token: {e}"
-            )
+            raise HTTPException(status_code=400, detail=f"Error verifying token: {e}")
 
         return message

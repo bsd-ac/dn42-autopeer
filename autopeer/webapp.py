@@ -18,10 +18,12 @@ app_peer.add_middleware(TokenMiddleware)
 
 scheduler = AsyncIOScheduler()
 
+
 @scheduler.scheduled_job("interval", seconds=5)
 async def clear_cache():
     logger.debug("Clearing cache")
     cache.clear()
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -29,9 +31,11 @@ async def lifespan(app: FastAPI):
     yield
     scheduler.shutdown()
 
+
 app = FastAPI(lifespan=lifespan)
 app.mount("/login", app_login)
 app.mount("/peer", app_peer)
+
 
 class PeerInfo(BaseModel):
     ASN: int
@@ -50,12 +54,14 @@ async def autopeer_login(peer_info: PeerInfo):
     cache[peer_info.ASN] = f"{token}"
     return {"token": f"{token}"}
 
+
 @app_peer.post("/info")
 async def autopeer_get(peer_info: PeerInfo):
     """
     Get peering information for given ASN.
     """
     return {"message": f"Autopeering with ASN {peer_info.ASN}"}
+
 
 @app_peer.post("/create")
 async def autopeer_create(peer_info: PeerInfo):
@@ -64,12 +70,14 @@ async def autopeer_create(peer_info: PeerInfo):
     """
     return {"message": f"Autopeering with ASN {peer_info.ASN}"}
 
+
 @app_peer.put("/update")
 async def autopeer_update(peer_info: PeerInfo):
     """
     Update peering information for given ASN.
     """
     return {"message": f"Autopeering with ASN {peer_info.ASN}"}
+
 
 @app_peer.delete("/delete")
 async def autopeer_delete(peer_info: PeerInfo):
