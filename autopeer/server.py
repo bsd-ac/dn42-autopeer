@@ -1,24 +1,65 @@
-import logging
+import argparse
+import grp
 import os
+import pwd
+import socket
 import sys
+import time
+import tomllib
 
 import uvicorn
-import zmq
-import zmq.asyncio
 
-from . import logger
+from . import logger, sp
 from .webapp import app
+from .peer_manager import PeerManager
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "-f",
+    metavar="file",
+    type=str,
+    help="config file, see `man 5 autopeer.conf` for details",
+    default="/etc/autopeer.conf",
+)
+parser.add_argument("-n", action="store_true", help="configtest mode")
+parser.add_argument(
+    "-d",
+    help="debug level",
+    choices=["debug", "info", "warn", "error", "critical"],
+    default="info",
+)
 
 
 def main():
-    # check if we are root, else quit
-    if os.geteuid() != 0:
-        logger("This script must be run as root")
-        sys.exit(1)
+    args = parser.parse_args()
+    logger.setLevel(args.d.upper())
 
-    context = zmq.Context()
+    with open(args.f, "rb") as f:
+        config = tomllib.load(f)
 
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    pid = os.fork()
+    if pid == 0:
+        # child process
+        sp[0].close()
+
+        if "chroot" in config:
+            os.chroot(config["chroot"])
+        os.chdir("/")
+
+        gid = grp.getgrnam(config["group"]).gr_gid
+        os.setgid(gid)
+        uid = pwd.getpwnam(config["user"]).pw_uid
+        os.setuid(uid)
+
+        uvicorn.run(app, host=config["host"], port=config["port"], workers=1)
+    else:
+        # parent process
+        logger.debug("Parent process")
+
+        sp[1].close()
+        pm = PeerManager(sp[0])
+        pm.run()
 
 
 if __name__ == "__main__":

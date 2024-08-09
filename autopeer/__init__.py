@@ -1,5 +1,6 @@
 import logging
 import logging.handlers
+import socket
 from typing import Dict
 
 logger: logging.Logger = logging.getLogger("autopeer")
@@ -21,3 +22,5 @@ logger.addHandler(console_handler)
 
 
 cache: Dict[int, str] = {}
+sp = socket.socketpair()
+max_bytes = 8

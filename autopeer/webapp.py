@@ -1,3 +1,4 @@
+import json
 import uuid
 from contextlib import asynccontextmanager
 from typing import Optional
@@ -6,8 +7,9 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from fastapi import FastAPI
 from pydantic import BaseModel
 
-from . import cache, logger
+from . import cache, logger, max_bytes, sp
 from .middleware import GPGMiddleware, TokenMiddleware
+
 
 app_login = FastAPI()
 app_login.add_middleware(GPGMiddleware)
@@ -44,6 +46,27 @@ class PeerInfo(BaseModel):
     peer_contact: Optional[str] = None
 
 
+pm_sock = sp[1]
+
+
+def pm_send(cmd: dict):
+    cmd_bytes = json.dumps(cmd).encode()
+    cmd_len = len(cmd_bytes).to_bytes(max_bytes)
+    pm_sock.send(cmd_len)
+    pm_sock.send(cmd_bytes)
+
+
+def pm_recv() -> dict:
+    rsp_bytes = pm_sock.recv(max_bytes)
+    try:
+        rsp_len = int.from_bytes(rsp_bytes)
+    except ValueError:
+        logger.critical(f"Invalid command length: {rsp_bytes}")
+        raise ValueError
+    rsp = pm_sock.recv(rsp_len)
+    return json.loads(rsp)
+
+
 @app_login.post("/")
 async def autopeer_login(peer_info: PeerInfo):
     """
@@ -68,6 +91,12 @@ async def autopeer_create(peer_info: PeerInfo):
     """
     Create a peering session with the given ASN.
     """
+    jinfo = {"ASN": 1234}
+    pm_send(jinfo)
+    resp = pm_recv()
+
+    logger.debug(f"Received response: {resp}")
+
     return {"message": f"Autopeering with ASN {peer_info.ASN}"}
 
 
