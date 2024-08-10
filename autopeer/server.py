@@ -12,6 +12,7 @@ import uvicorn
 from . import logger, sp
 from .webapp import app
 from .peer_manager import PeerManager
+from . import settings
 
 
 parser = argparse.ArgumentParser()
@@ -38,18 +39,21 @@ def main():
     with open(args.f, "rb") as f:
         config = tomllib.load(f)
 
+    settings.update(config)
+
     pid = os.fork()
     if pid == 0:
         # child process
         sp[0].close()
 
+        gid = grp.getgrnam(config["group"]).gr_gid
+        uid = pwd.getpwnam(config["user"]).pw_uid
+
         if "chroot" in config:
             os.chroot(config["chroot"])
         os.chdir("/")
 
-        gid = grp.getgrnam(config["group"]).gr_gid
         os.setgid(gid)
-        uid = pwd.getpwnam(config["user"]).pw_uid
         os.setuid(uid)
 
         uvicorn.run(app, host=config["host"], port=config["port"], workers=1)

@@ -7,15 +7,15 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from fastapi import FastAPI
 from pydantic import BaseModel
 
-from . import cache, logger, max_bytes, sp
+from . import cache, logger, max_bytes, settings, sp
 from .middleware import GPGMiddleware, TokenMiddleware
 
 
 app_login = FastAPI()
-app_login.add_middleware(GPGMiddleware)
+app_login.add_middleware(GPGMiddleware, settings=settings)
 
 app_peer = FastAPI()
-app_peer.add_middleware(GPGMiddleware)
+app_peer.add_middleware(GPGMiddleware, settings=settings)
 app_peer.add_middleware(TokenMiddleware)
 
 scheduler = AsyncIOScheduler()

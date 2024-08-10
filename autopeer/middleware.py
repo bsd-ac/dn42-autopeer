@@ -11,8 +11,9 @@ from fastapi import HTTPException
 from starlette.requests import Request
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
-from . import cache, logger
+from . import cache, logger, settings
 from .utils import DN42
+from .settings import Settings
 
 
 class GPGMiddleware:
@@ -21,9 +22,10 @@ class GPGMiddleware:
     If there is no body, the request is passed through.
     """
 
-    def __init__(self, app: ASGIApp, gpg: gnupg.GPG = None) -> None:
+    def __init__(self, app: ASGIApp, gpg: gnupg.GPG = None, settings: Settings = None) -> None:
         self.app = app
         self.gpg = gnupg.GPG() if gpg is None else gpg
+        self.settings = settings
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope["type"] != "http":
@@ -78,7 +80,10 @@ class GPGMiddleware:
         logger.debug(f"Signature: {signature}")
 
         # get the email of the ASN
-        mail = DN42.email(ASN)
+        try:
+            mail = DN42.email(self.settings.registry, ASN)
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Error getting email: {e}")
         if not mail:
             raise HTTPException(status_code=400, detail="ASN not found")
         logger.debug(f"Email: {mail}")
