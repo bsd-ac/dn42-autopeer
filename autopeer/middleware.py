@@ -90,6 +90,16 @@ class GPGMiddleware:
             raise HTTPException(status_code=400, detail="ASN not found")
         logger.debug(f"Email: {mail}")
 
+        try:
+            pgp_fingerprint = DN42.pgp_fingerprint(self.settings.registry, ASN)
+        except Exception as e:
+            raise HTTPException(
+                status_code=400, detail=f"Error getting PGP fingerprint: {e}"
+            )
+        if not pgp_fingerprint:
+            raise HTTPException(status_code=400, detail="PGP fingerprint not found")
+        logger.debug(f"PGP fingerprint: {pgp_fingerprint}")
+
         # get the public key of the ASN
         # only searches for the key using WKD and local keyring
         logger.debug("Getting public key")
@@ -126,6 +136,14 @@ class GPGMiddleware:
                         raise HTTPException(
                             status_code=401, detail="Signature by wrong user"
                         )
+                    sig_fingerprint = info["pubkey_fingerprint"]
+                    logger.debug(f"Signature fingerprint: {sig_fingerprint}")
+                    if sig_fingerprint != pgp_fingerprint:
+                        raise HTTPException(
+                            status_code=401, detail="PGP fingerprint mismatch"
+                        )
+                    logger.debug("Signature verified")
+
         except HTTPException:
             raise
         except Exception as e:
