@@ -22,7 +22,9 @@ class GPGMiddleware:
     If there is no body, the request is passed through.
     """
 
-    def __init__(self, app: ASGIApp, gpg: gnupg.GPG = None, settings: Settings = None) -> None:
+    def __init__(
+        self, app: ASGIApp, gpg: gnupg.GPG = None, settings: Settings = None
+    ) -> None:
         self.app = app
         self.gpg = gnupg.GPG() if gpg is None else gpg
         self.settings = settings
