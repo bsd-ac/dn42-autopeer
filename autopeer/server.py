@@ -64,6 +64,7 @@ def main():
         sp[1].close()
         pm = PeerManager(sp[0])
         pm.run()
+    os.waitpid(pid, 0)
 
 
 if __name__ == "__main__":
