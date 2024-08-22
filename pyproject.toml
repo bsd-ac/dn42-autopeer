@@ -18,9 +18,10 @@ classifiers = [
 ]
 dependencies = [
   "apscheduler",
+  "cachetools",
   "fastapi[standard]",
   "python-gnupg",
-  "sqlalchemy",
+  "SQLAlchemy",
 ]
 
 [project.scripts]
