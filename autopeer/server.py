@@ -43,14 +43,20 @@ def main():
         # child process
         sp[0].close()
 
-        gid = grp.getgrnam(config["group"]).gr_gid
-        uid = pwd.getpwnam(config["user"]).pw_uid
+        if not "host" in config["uvicorn"]:
+            config["uvicorn"]["host"] = "127.0.0.1"
+        if not "port" in config["uvicorn"]:
+            config["uvicorn"]["port"] = 8000
+        config["uvicorn"]["workers"] = 1
+
+        gid = grp.getgrnam(config["autopeer"]["group"]).gr_gid
+        uid = pwd.getpwnam(config["autopeer"]["user"]).pw_uid
 
         os.setgid(gid)
         os.setuid(uid)
 
-        settings.initialize(config)
-        uvicorn.run(app, host=config["host"], port=config["port"], workers=1)
+        settings.initialize(config["autopeer"])
+        uvicorn.run(app, **config["uvicorn"])
     else:
         # parent process
         logger.debug("Parent process")
