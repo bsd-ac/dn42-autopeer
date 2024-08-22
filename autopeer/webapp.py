@@ -11,7 +11,6 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from . import cache, max_bytes, models, schemas, settings, sp
-from .database import SessionLocal
 from .logger import logger
 from .middleware import GPGMiddleware, TokenMiddleware
 
@@ -71,7 +70,7 @@ def pm_recv() -> dict:
 
 
 def get_db():
-    db = SessionLocal()
+    db = settings.session_local()
     try:
         yield db
     finally:

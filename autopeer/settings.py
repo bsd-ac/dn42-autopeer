@@ -2,10 +2,9 @@ import os
 
 import sqlalchemy as db
 from sqlalchemy import String, text
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
 
 from . import models
-from .database import SessionLocal
 from .logger import logger
 from .migrations import migrations
 
@@ -22,13 +21,15 @@ class Settings:
         self.registry = config.get("registry", self.registry)
         self.database = os.path.join(config.get("db_dir", self.db_dir), "peers.db")
         self.db_engine = db.create_engine(f"sqlite:///{self.database}")
-        models.Base.metadata.create_all(bind=self.db_engine)
+        self.session_local = sessionmaker(
+            autocommit=False, autoflush=False, bind=self.db_engine
+        )
 
     def get_version(self):
         if not self.initialized:
             raise RuntimeError("Settings not initialized")
 
-        with SessionLocal() as session:
+        with self.session_local() as session:
             version = session.execute(text("PRAGMA user_version;")).fetchone()[0]
             session.commit()
             return version
@@ -37,7 +38,7 @@ class Settings:
         if not self.initialized:
             raise RuntimeError("Settings not initialized")
 
-        with SessionLocal() as session:
+        with self.session_local() as session:
             session.execute(text(f"PRAGMA user_version = {version};"))
             session.commit()
 
@@ -53,7 +54,7 @@ class Settings:
                 continue
             logger.debug(f"Executing migration: {migration_id}")
 
-            with SessionLocal() as session:
+            with self.session_local() as session:
                 for statement in migration:
                     session.execute(text(statement))
                 session.commit()

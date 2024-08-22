@@ -38,8 +38,6 @@ def main():
     with open(args.f, "rb") as f:
         config = tomllib.load(f)
 
-    settings.initialize(config)
-
     pid = os.fork()
     if pid == 0:
         # child process
@@ -55,6 +53,7 @@ def main():
         os.setgid(gid)
         os.setuid(uid)
 
+        settings.initialize(config)
         uvicorn.run(app, host=config["host"], port=config["port"], workers=1)
     else:
         # parent process
