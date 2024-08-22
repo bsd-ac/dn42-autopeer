@@ -21,43 +21,29 @@ wgpeer {{ peer_pubkey }} wgendpoint {{ peer_ip }} {{ peer_port }} wgaip {{ peer_
 """
 )
 
-bgp_peers = Template(
-    """
-group "dn42_peers" {
-        announce IPv4 unicast
-        announce IPv6 unicast
-{% for peer in peers %}
-        neighbor {{ peer.remote_ip6}} {
-                remote-as {{ peer.asn }}
-                descr {{ peer.description }}
-                set nexthop {{ peer.remote_ip6 }}
-        }
-{% endfor %}
-}
-"""
-)
-
-bgp_listeners = Template(
-    """
-listen on {{ router_id }} port 179
-{% for peer in peers %}
-listen on {{ peer.local_ll6 }}%wg{{ peer.wgid }} port 179
-{% endfor %}                       
-"""
-)
-
-bgp_default = Template(
+bgpd_conf = Template(
     """
 ###
 # macros
 ASN="{{ ASN }}"
 
+{% for peer in peers %}
+P{{ loop.index }}_descr="{{ peer.asn }}.{{ peer.description }}"
+P{{ loop.index }}_remote4="{{ peer.dn42_ip4 }}"
+P{{ loop.index }}_remote6="{{ peer.dn42_ip6 }}"
+P{{ loop.index }}_asn="{{ peer.asn }}"
+
+{% endfor %}
 ###
 # global configuration
 AS $ASN
-router-id {{ router_id }}
+router-id {{ BGP_ROUTER_ID }}
 
-include "/etc/bgpd.d/listeners.conf"
+listen on {{ BGP_ROUTER_ID }} port 179
+{% for peer in peers %}
+listen on {{ peer.ll_ip4 }} port 179
+listen on {{ peer.ll_ip6 }} port 179
+{% endfor %}
 
 socket "/var/www/run/bgpd.rsock" restricted
 
@@ -69,6 +55,11 @@ dump table-v2 "/tmp/rib-dump-%H%M" 30
 
 ###
 # set configuration
+prefix-set mynetworks {
+        172.22.109.96/27
+        fd5e:e6ff:d44::4242/48
+}
+
 prefix-set dn42 {
         172.20.0.0/14
         fd00::/8
@@ -86,10 +77,19 @@ network prefix-set mynetworks set large-community $ASN:1:1
 
 ###
 # neighbors and groups
+group "dn42_peers" {
+        announce IPv4 unicast
+        announce IPv6 unicast
+{% for peer in peers %}
+        neighbor $P{{ loop.index }}_remote6 {
+                remote-as $P{{ loop.index }}_asn
+                descr $P{{ loop.index }}_descr
+                set nexthop $P{{ loop.index }}_remote6
+        }
+{% endfor %}
+}
+
 ###
-
-include "/etc/bgpd.d/peers.conf"
-
 # filters
 
 # deny more-specifics of our own originated prefixes
@@ -97,6 +97,9 @@ deny quick from ebgp prefix-set mynetworks or-longer
 
 # filter out too long paths
 deny quick from any max-as-len 8
+
+# don't need non-dn42 routes
+#deny quick from ebgp prefix-set dn42 or-longer
 
 # Outbound EBGP: only allow self originated networks to ebgp peers
 allow to ebgp prefix-set mynetworks large-community $ASN:1:1

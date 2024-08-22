@@ -11,9 +11,10 @@ from fastapi import HTTPException
 from starlette.requests import Request
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
-from . import cache, logger, settings
-from .utils import DN42
+from . import cache, settings
+from .logger import logger
 from .settings import Settings
+from .utils import DN42
 
 
 class GPGMiddleware:

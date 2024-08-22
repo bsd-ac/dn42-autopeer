@@ -6,13 +6,14 @@ from contextlib import asynccontextmanager
 from typing import Optional
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException
 from pydantic import BaseModel
+from sqlalchemy.orm import Session
 
-from . import cache, max_bytes, settings, sp
+from . import cache, max_bytes, models, schemas, settings, sp
+from .database import SessionLocal
 from .logger import logger
 from .middleware import GPGMiddleware, TokenMiddleware
-
 
 app_login = FastAPI()
 app_login.add_middleware(GPGMiddleware, settings=settings)
@@ -43,62 +44,6 @@ app.mount("/login", app_login)
 app.mount("/peer", app_peer)
 
 
-class PeerInfo(BaseModel):
-    ASN: int
-    peer_ip: Optional[str] = None
-    peer_port: Optional[int] = None
-    peer_pubkey: Optional[str] = None
-
-    ll_ip6: Optional[str] = None
-    ll_ip4: Optional[str] = None
-
-    dn42_ip6: Optional[str] = None
-    dn42_ip4: Optional[str] = None
-
-    def validate(self):
-        if not self.peer_port:
-            raise HTTPException(status_code=400, detail="Peer port not found in body")
-        if self.peer_port < 0 or self.peer_port > 65535:
-            raise HTTPException(status_code=400, detail="Peer port is not a valid port number")
-
-        # check that all peer ip are valid IPv4/IPv6 address
-        if not self.peer_ip:
-            raise HTTPException(status_code=400, detail="Peer IP address not found in body")
-        if not self.ll_ip4:
-            raise HTTPException(status_code=400, detail="Local IPv4 address not found in body")
-        if not self.ll_ip6:
-            raise HTTPException(status_code=400, detail="Local IPv6 address not found in body")
-        if not self.dn42_ip4:
-            raise HTTPException(status_code=400, detail="DN42 IPv4 address not found in body")
-        if not self.dn42_ip6:
-            raise HTTPException(status_code=400, detail="DN42 IPv6 address not found in body")
-        try:
-            ipaddress.ip_address(self.peer_ip)
-        except ValueError:
-            raise HTTPException(status_code=400, detail=f"IP address {self.peer_ip} is not a valid IP address")
-        for ip in [self.ll_ip4, self.dn42_ip4]:
-            try:
-                ip = ipaddress.ip_address(ip)
-                if not isinstance(ip, ipaddress.IPv4Address):
-                    raise ValueError
-            except ValueError:
-                raise HTTPException(status_code=400, detail=f"IP address {ip} is not a valid IPv4 address")
-        for ip in [self.ll_ip6, self.dn42_ip6]:
-            try:
-                ip = ipaddress.ip_address(ip)
-                if not isinstance(ip, ipaddress.IPv6Address):
-                    raise ValueError
-            except ValueError:
-                raise HTTPException(status_code=400, detail=f"IP address {ip} is not a valid IPv6 address")
-
-        # check if pubkey is valid base64
-        if not self.peer_pubkey:
-            raise HTTPException(status_code=400, detail="Peer public key not found in body")
-        try:
-            pubkey_bytes = base64.b64decode(self.peer_pubkey)
-        except Exception as e:
-            raise HTTPException(status_code=400, detail=f"Public key is not a valid base64")
-
 pm_sock = sp[1]
 
 
@@ -116,12 +61,33 @@ def pm_recv() -> dict:
     except ValueError:
         logger.critical(f"Invalid command length: {rsp_bytes}")
         raise ValueError
-    rsp = pm_sock.recv(rsp_len)
-    return json.loads(rsp)
+    rsp_json = pm_sock.recv(rsp_len)
+    try:
+        rsp = json.loads(rsp_json)
+        if "success" not in rsp:
+            logger.critical(f"Invalid response: {rsp}")
+            return {"success": False, "error": "Invalid response from peer manager"}
+        return rsp
+    except json.JSONDecodeError:
+        logger.critical(f"Invalid response: {rsp_json}")
+        return {"success": False, "error": "Invalid response from peer manager"}
+    except Exception as e:
+        logger.error(f"Failed to decode response: {e}")
+        return {"success": False, "error": str(e)}
+
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 
 @app_login.post("/")
-async def autopeer_login(peer_info: PeerInfo):
+async def autopeer_login(
+    peer_info: schemas.PeerInfo, session: Session = Depends(get_db)
+):
     """
     Login to the autopeering service.
     Creates a new session token that is valid for one minute.
@@ -132,21 +98,29 @@ async def autopeer_login(peer_info: PeerInfo):
 
 
 @app_peer.post("/info")
-async def autopeer_get(peer_info: PeerInfo):
+async def autopeer_get(peer_info: schemas.PeerInfo, session: Session = Depends(get_db)):
     """
     Get peering information for given ASN.
     """
+    peer = (
+        session.query(models.PeerInfo)
+        .filter(models.PeerInfo.ASN == peer_info.ASN)
+        .first()
+    )
+    logger.debug(f"Peer info: {peer}")
     return {"message": f"Autopeering with ASN {peer_info.ASN}"}
 
 
 @app_peer.post("/create")
-async def autopeer_create(peer_info: PeerInfo):
+async def autopeer_create(
+    peer_info: schemas.PeerInfo, session: Session = Depends(get_db)
+):
     """
     Create or update a peering session with the given ASN.
     """
     # validate that peer information is valid
 
-    peer_info.validate()
+    peer_info.dn42_validate()
 
     jinfo = {"command": "create", "peer_info": peer_info.model_dump()}
     pm_send(jinfo)
@@ -158,7 +132,9 @@ async def autopeer_create(peer_info: PeerInfo):
 
 
 @app_peer.delete("/delete")
-async def autopeer_delete(peer_info: PeerInfo):
+async def autopeer_delete(
+    peer_info: schemas.PeerInfo, session: Session = Depends(get_db)
+):
     """
     Delete peering session with the given ASN.
     """
@@ -169,8 +145,11 @@ async def autopeer_delete(peer_info: PeerInfo):
         resp = pm_recv()
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error deleting peer: {e}")
-    
+
     success = resp.get("success", False)
     if not success:
-        raise  HTTPException(status_code=500, detail=f'Error deleting peer: {resp.get("message", "unknown error")}')
+        raise HTTPException(
+            status_code=500,
+            detail=f'Error deleting peer: {resp.get("message", "unknown error")}',
+        )
     return {"success": True, "message": f"ASN {peer_info.ASN} deleted"}

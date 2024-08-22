@@ -9,11 +9,10 @@ import tomllib
 
 import uvicorn
 
-from . import logger, sp
-from .webapp import app
+from . import settings, sp
+from .logger import logger
 from .peer_manager import PeerManager
-from . import settings
-
+from .webapp import app
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -39,7 +38,7 @@ def main():
     with open(args.f, "rb") as f:
         config = tomllib.load(f)
 
-    settings.update(config)
+    settings.initialize(config)
 
     pid = os.fork()
     if pid == 0:

@@ -3,7 +3,6 @@ import logging.handlers
 import socket
 from typing import Dict
 
-from .logger import logger
 from .settings import Settings
 
 cache: Dict[int, str] = {}

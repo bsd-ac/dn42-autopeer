@@ -1,6 +1,6 @@
 import os
 
-from . import logger
+from .logger import logger
 
 
 class DN42:
