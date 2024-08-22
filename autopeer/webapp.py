@@ -25,12 +25,6 @@ app_peer.add_middleware(TokenMiddleware)
 scheduler = AsyncIOScheduler()
 
 
-@scheduler.scheduled_job("interval", seconds=5)
-async def clear_cache():
-    logger.debug("Clearing cache")
-    cache.clear()
-
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     settings.migrate()

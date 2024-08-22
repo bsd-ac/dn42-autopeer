@@ -208,10 +208,8 @@ class TokenMiddleware:
 
         # check that token is valid
         try:
-            if cache.get(ASN) != token:
+            if cache[ASN] != token:
                 raise HTTPException(status_code=401, detail="Token is invalid")
-            cache.pop(ASN)
-            logger.debug("ASN {ASN} token cleared")
         except KeyError:
             raise HTTPException(status_code=401, detail="ASN is not logged in")
         except Exception as e:
