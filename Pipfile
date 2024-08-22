@@ -6,8 +6,10 @@ name = "pypi"
 [packages]
 autopeer = {file = "."}
 apscheduler = "*"
+cachetools = "*"
 fastapi = {extras = ["standard"], version = "*"}
 python-gnupg = "*"
+SQLAlchemy = "*"
 
 [dev-packages]
 black = "*"
