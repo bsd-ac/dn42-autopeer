@@ -8,6 +8,10 @@ registry
 *.conf
 *.toml
 
+# ignore some dev files
+login.sh
+request*
+
 # don't care about openapi
 openapi/
 
