@@ -46,10 +46,6 @@ def main():
         gid = grp.getgrnam(config["group"]).gr_gid
         uid = pwd.getpwnam(config["user"]).pw_uid
 
-        if "chroot" in config:
-            os.chroot(config["chroot"])
-        os.chdir("/")
-
         os.setgid(gid)
         os.setuid(uid)
 
