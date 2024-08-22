@@ -39,8 +39,11 @@ def main():
         config = tomllib.load(f)
 
     pid = os.fork()
-    if pid == 0:
-        # child process
+    if pid < 0:
+        logger.critical("Failed to fork")
+        sys.exit(1)
+    elif pid > 0:
+        # parent process
         sp[0].close()
 
         if not "host" in config["uvicorn"]:
@@ -58,7 +61,7 @@ def main():
         settings.initialize(config["autopeer"])
         uvicorn.run(app, **config["uvicorn"])
     else:
-        # parent process
+        # child process
         logger.debug("Parent process")
 
         sp[1].close()
