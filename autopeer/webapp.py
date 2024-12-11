@@ -1,6 +1,7 @@
 import base64
 import ipaddress
 import json
+import socket
 import uuid
 from contextlib import asynccontextmanager
 from typing import Optional
@@ -14,15 +15,7 @@ from . import cache, max_bytes, models, schemas, settings, sp
 from .logger import logger
 from .middleware import GPGMiddleware, TokenMiddleware
 
-app_login = FastAPI()
-app_login.add_middleware(GPGMiddleware, settings=settings)
-
-app_peer = FastAPI()
-app_peer.add_middleware(GPGMiddleware, settings=settings)
-app_peer.add_middleware(TokenMiddleware)
-
 scheduler = AsyncIOScheduler()
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -33,21 +26,20 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
-app.mount("/login", app_login)
-app.mount("/peer", app_peer)
+app.add_middleware(GPGMiddleware, settings=settings)
+app.add_middleware(TokenMiddleware, check_paths=["/create", "/delete", "/info"])
+
+app.state.sock = sp[1]
 
 
-pm_sock = sp[1]
-
-
-def pm_send(cmd: dict):
+def pm_send(pm_sock: socket.socket, cmd: dict):
     cmd_bytes = json.dumps(cmd).encode()
     cmd_len = len(cmd_bytes).to_bytes(max_bytes)
     pm_sock.send(cmd_len)
     pm_sock.send(cmd_bytes)
 
 
-def pm_recv() -> dict:
+def pm_recv(pm_sock: socket.socket) -> dict:
     rsp_bytes = pm_sock.recv(max_bytes)
     try:
         rsp_len = int.from_bytes(rsp_bytes)
@@ -77,7 +69,7 @@ def get_db():
         db.close()
 
 
-@app_login.post("/")
+@app.post("/login")
 async def autopeer_login(
     peer_info: schemas.PeerInfo, session: Session = Depends(get_db)
 ):
@@ -90,7 +82,7 @@ async def autopeer_login(
     return {"token": f"{token}"}
 
 
-@app_peer.post("/info")
+@app.post("/info")
 async def autopeer_get(peer_info: schemas.PeerInfo, session: Session = Depends(get_db)):
     """
     Get peering information for given ASN.
@@ -104,7 +96,7 @@ async def autopeer_get(peer_info: schemas.PeerInfo, session: Session = Depends(g
     return {"message": f"Autopeering with ASN {peer_info.ASN}"}
 
 
-@app_peer.post("/create")
+@app.post("/create")
 async def autopeer_create(
     peer_info: schemas.PeerInfo, session: Session = Depends(get_db)
 ):
@@ -116,15 +108,15 @@ async def autopeer_create(
     peer_info.dn42_validate()
 
     jinfo = {"command": "create", "peer_info": peer_info.model_dump()}
-    pm_send(jinfo)
-    resp = pm_recv()
+    pm_send(app.state.sock, jinfo)
+    resp = pm_recv(app.state.sock)
 
     logger.debug(f"Received response: {resp}")
 
     return {"message": f"Autopeering with ASN {peer_info.ASN}"}
 
 
-@app_peer.delete("/delete")
+@app.delete("/delete")
 async def autopeer_delete(
     peer_info: schemas.PeerInfo, session: Session = Depends(get_db)
 ):
@@ -133,7 +125,7 @@ async def autopeer_delete(
     """
     logger.debug(f"Peer info: {peer_info}")
     jinfo = {"command": "delete", "ASN": peer_info.ASN}
-    pm_send(jinfo)
+    pm_send(app.state.sock, jinfo)
     try:
         resp = pm_recv()
     except Exception as e:

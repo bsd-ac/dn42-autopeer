@@ -159,11 +159,13 @@ class TokenMiddleware:
     """
     Middleware to verify that the token of the request is valid.
     If there is no body, the request is passed through.
+    If the path is not in the check_paths, the request is passed through.
     """
 
-    def __init__(self, app: ASGIApp, gpg: gnupg.GPG = None) -> None:
+    def __init__(self, app: ASGIApp, gpg: gnupg.GPG = None, check_paths = []) -> None:
         self.app = app
         self.gpg = gnupg.GPG() if gpg is None else gpg
+        self.check_paths = check_paths
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope["type"] != "http":
@@ -179,6 +181,9 @@ class TokenMiddleware:
 
         message: Message = await receive()
         assert message["type"] == "http.request"
+
+        if request.url.path not in self.check_paths:
+            return message
 
         body: bytes = message["body"]
         if not body:
