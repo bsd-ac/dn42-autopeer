@@ -61,7 +61,8 @@ def pm_recv(pm_sock: socket.socket) -> dict:
 
 
 def get_db():
-    db = settings.session_local()
+    session = settings.session
+    db = session()
     try:
         yield db
     finally:

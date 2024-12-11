@@ -8,16 +8,44 @@ from .logger import logger
 
 class Settings:
     def __init__(self):
-        self.initialized = False
-        self.registry = "/var/db/dn42/registry"
-        self.db_dir = "/var/db/dn42/db"
+        self._initialized = False
 
     def initialize(self, config: dict):
-        self.initialized = True
+        self._initialized = True
 
-        self.registry = config.get("registry", self.registry)
-        self.database = os.path.join(config.get("db_dir", self.db_dir), "peers.db")
-        self.db_engine = db.create_engine(f"sqlite:///{self.database}")
-        self.session_local = sessionmaker(
+        self._registry = config.get("registry")
+        self._database = os.path.join(config.get("db_dir"), "peers.db")
+        self._db_engine = db.create_engine(f"sqlite:///{self.database}")
+        self._session = sessionmaker(
             autocommit=False, autoflush=False, bind=self.db_engine
         )
+
+    @property
+    def registry(self):
+        if not self._initialized:
+            raise ValueError("Settings not initialized")
+        return self._registry
+    
+    @property
+    def db_dir(self):
+        if not self._initialized:
+            raise ValueError("Settings not initialized")
+        return self._db_dir
+    
+    @property
+    def database(self):
+        if not self._initialized:
+            raise ValueError("Settings not initialized")
+        return self._database
+    
+    @property
+    def db_engine(self):
+        if not self._initialized:
+            raise ValueError("Settings not initialized")
+        return self._db_engine
+    
+    @property
+    def session(self):
+        if not self._initialized:
+            raise ValueError("Settings not initialized")
+        return self._session
