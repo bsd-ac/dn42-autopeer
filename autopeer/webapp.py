@@ -1,6 +1,7 @@
 import base64
 import ipaddress
 import json
+import os
 import socket
 import uuid
 from contextlib import asynccontextmanager
@@ -8,6 +9,7 @@ from typing import Optional
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from fastapi import Depends, FastAPI, HTTPException
+from git import Repo
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -23,6 +25,16 @@ async def lifespan(app: FastAPI):
     yield
     scheduler.shutdown()
 
+@scheduler.scheduled_job("interval", minutes=5)
+def git_update():
+    logger.info("Updating registry")
+    if not os.path.isdir(settings.registry):
+        logger.debug(f"Registry directory not found: {settings.registry}")
+        Repo.clone_from(url=settings.registry_url, to_path=settings.registry)
+        return
+    repo = Repo(settings.registry)
+    repo.remotes.origin.pull()
+    logger.debug("Registry updated")
 
 app = FastAPI(lifespan=lifespan)
 app.add_middleware(GPGMiddleware, settings=settings)

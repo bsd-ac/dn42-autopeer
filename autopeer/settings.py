@@ -14,6 +14,7 @@ class Settings:
         self._initialized = True
 
         self._registry = config.get("registry")
+        self._registry_url = config.get("registry_url", "git@git.dn42.dev:dn42/registry.git")
         self._database = os.path.join(config.get("db_dir"), "peers.db")
         self._db_engine = db.create_engine(f"sqlite:///{self.database}")
         self._session = sessionmaker(
@@ -25,6 +26,12 @@ class Settings:
         if not self._initialized:
             raise ValueError("Settings not initialized")
         return self._registry
+    
+    @property
+    def registry_url(self):
+        if not self._initialized:
+            raise ValueError("Settings not initialized")
+        return self._registry_url
     
     @property
     def db_dir(self):

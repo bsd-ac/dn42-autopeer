@@ -21,6 +21,7 @@ dependencies = [
   "apscheduler",
   "cachetools",
   "fastapi[standard]",
+  "GitPython",
   "python-gnupg",
   "SQLAlchemy",
 ]
