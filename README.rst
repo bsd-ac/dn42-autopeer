@@ -17,7 +17,8 @@ Usage
 
 .. code:: bash
 
-    $ autopeer -f /etc/autopeer.conf
+    $ env GIT_SSH_COMMAND="ssh -i /home/user/.ssh/id_ed25519 -o StrictHostKeyChecking=no -o IdentitiesOnly=yes" \
+        autopeer -f /etc/autopeer.conf
 
 
 Autopeer
@@ -34,4 +35,14 @@ The signature is verified by fetching the GPG key for the email registered by th
         -H "Content-Type: application/json" \
         -H "X-DN42-Signature: $(cat request.sig)" \
         -H "X-DN42-ASN: 4242420000" \
-        https://dn42-sea.bsd.ac/autopeer
+        https://dn42-nue.bsd.ac/autopeer
+
+Internals
+---------
+
+What it does:
+- Fetches and keeps the DN42 registry updated in a local folder.
+- Manages wireguard configurations for a peer on request.
+- Manages BGP configurations for a peer on request.
+
+User authentication works by verifying the GPG signature of the request. GPG keys are fetched from the DN42 registry.

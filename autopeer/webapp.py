@@ -119,11 +119,11 @@ async def autopeer_create(
 
     peer_info.dn42_validate()
 
-    jinfo = {"command": "create", "peer_info": peer_info.model_dump()}
-    pm_send(app.state.sock, jinfo)
-    resp = pm_recv(app.state.sock)
+    # jinfo = {"command": "create", "peer_info": peer_info.model_dump()}
+    # pm_send(app.state.sock, jinfo)
+    # resp = pm_recv(app.state.sock)
 
-    logger.debug(f"Received response: {resp}")
+    # logger.debug(f"Received response: {resp}")
 
     return {"message": f"Autopeering with ASN {peer_info.ASN}"}
 
@@ -136,17 +136,17 @@ async def autopeer_delete(
     Delete peering session with the given ASN.
     """
     logger.debug(f"Peer info: {peer_info}")
-    jinfo = {"command": "delete", "ASN": peer_info.ASN}
-    pm_send(app.state.sock, jinfo)
-    try:
-        resp = pm_recv()
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error deleting peer: {e}")
+    # jinfo = {"command": "delete", "ASN": peer_info.ASN}
+    # pm_send(app.state.sock, jinfo)
+    # try:
+    #     resp = pm_recv()
+    # except Exception as e:
+    #     raise HTTPException(status_code=500, detail=f"Error deleting peer: {e}")
 
-    success = resp.get("success", False)
-    if not success:
-        raise HTTPException(
-            status_code=500,
-            detail=f'Error deleting peer: {resp.get("message", "unknown error")}',
-        )
+    # success = resp.get("success", False)
+    # if not success:
+    #     raise HTTPException(
+    #         status_code=500,
+    #         detail=f'Error deleting peer: {resp.get("message", "unknown error")}',
+    #     )
     return {"success": True, "message": f"ASN {peer_info.ASN} deleted"}
