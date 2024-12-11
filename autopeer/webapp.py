@@ -19,7 +19,6 @@ scheduler = AsyncIOScheduler()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    settings.migrate()
     scheduler.start()
     yield
     scheduler.shutdown()
