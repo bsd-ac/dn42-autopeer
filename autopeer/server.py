@@ -9,10 +9,10 @@ import tomllib
 
 import uvicorn
 
-from . import settings, sp
-from .logger import logger
-from .peer_manager import PeerManager
-from .webapp import app
+from autopeer import settings, sp
+from autopeer.logger import logger
+from autopeer.peer_manager import PeerManager
+from autopeer.webapp import app
 
 parser = argparse.ArgumentParser()
 parser.add_argument(

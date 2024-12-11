@@ -8,10 +8,10 @@ from typing import Generator, Optional
 
 from fastapi import HTTPException
 
-from . import max_bytes
-from .logger import logger
-from .schemas import PeerInfo
-from .templates import bgpd_conf, hostname_wg
+from autopeer import max_bytes
+from autopeer.logger import logger
+from autopeer.schemas import PeerInfo
+from autopeer.templates import bgpd_conf, hostname_wg
 
 
 class PeerManager:

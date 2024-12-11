@@ -3,7 +3,7 @@ import os
 import sqlalchemy as db
 from sqlalchemy.orm import sessionmaker
 
-from .logger import logger
+from autopeer.logger import logger
 
 
 class Settings:

@@ -13,6 +13,9 @@ registry
 login.sh
 request*
 
+# ignore emacs temp
+*~
+
 # don't care about openapi
 openapi/
 

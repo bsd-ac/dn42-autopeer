@@ -13,9 +13,9 @@ from git import Repo
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from . import cache, max_bytes, models, schemas, settings, sp
-from .logger import logger
-from .middleware import GPGMiddleware, TokenMiddleware
+from autopeer import cache, max_bytes, models, schemas, settings, sp
+from autopeer.logger import logger
+from autopeer.middleware import GPGMiddleware, TokenMiddleware
 
 scheduler = AsyncIOScheduler()
 

@@ -1,6 +1,6 @@
 import os
 
-from .logger import logger
+from autopeer.logger import logger
 
 
 class DN42:

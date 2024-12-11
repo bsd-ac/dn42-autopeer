@@ -2,7 +2,7 @@ import socket
 
 from cachetools import TTLCache
 
-from .settings import Settings
+from autopeer.settings import Settings
 
 cache: TTLCache = TTLCache(maxsize=1000, ttl=5)
 sp = socket.socketpair()
