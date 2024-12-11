@@ -32,5 +32,8 @@ autopeer = "autopeer.server:main"
 Repository = "https://github.com/bsd-ac/dn42-autopeer"
 License = "https://github.com/bsd-ac/dn42-autopeer/blob/main/LICENSE"
 
+[tool.setuptools]
+packages = ["autopeer"]
+
 [tool.isort]
 profile = "black"
