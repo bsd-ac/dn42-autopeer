@@ -1,7 +1,4 @@
-import logging
-import logging.handlers
 import socket
-from typing import Dict
 
 from cachetools import TTLCache
 

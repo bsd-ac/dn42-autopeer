@@ -5,6 +5,7 @@ name = "pypi"
 
 [packages]
 autopeer = {file = "."}
+alembic = "*"
 apscheduler = "*"
 cachetools = "*"
 fastapi = {extras = ["standard"], version = "*"}

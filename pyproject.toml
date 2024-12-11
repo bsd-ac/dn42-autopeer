@@ -17,6 +17,7 @@ classifiers = [
   "Programming Language :: Python"
 ]
 dependencies = [
+  "alembic",
   "apscheduler",
   "cachetools",
   "fastapi[standard]",

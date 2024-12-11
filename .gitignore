@@ -7,6 +7,7 @@ registry
 # don't commit config files by mistake
 *.conf
 *.toml
+*.ini
 
 # ignore some dev files
 login.sh

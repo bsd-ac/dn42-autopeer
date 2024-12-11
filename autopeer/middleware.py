@@ -88,7 +88,7 @@ class GPGMiddleware:
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"Error getting email: {e}")
         if not mail:
-            raise HTTPException(status_code=400, detail="ASN not found")
+            raise HTTPException(status_code=400, detail=f"ASN not found: {ASN}")
         logger.debug(f"Email: {mail}")
 
         try:
