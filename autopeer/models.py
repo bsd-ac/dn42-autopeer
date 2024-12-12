@@ -5,7 +5,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 Base = declarative_base()
 
 
-class PeerInfo(Base):
+class PeerInfoDB(Base):
     __tablename__ = "peerinfo"
 
     ASN: Mapped[int] = mapped_column("ASN", primary_key=True)
@@ -19,6 +19,8 @@ class PeerInfo(Base):
     peer_psk: Mapped[str] = mapped_column(
         "PEER_PSK", String(30), nullable=False, unique=True
     )
+
+    wg_privkey: Mapped[str] = mapped_column("WG_PRIVKEY", nullable=False, unique=True)
 
     ll_ip4: Mapped[str] = mapped_column("LL_IP4", nullable=False, unique=True)
     ll_ip6: Mapped[str] = mapped_column("LL_IP6", nullable=False, unique=True)

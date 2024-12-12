@@ -99,13 +99,26 @@ async def autopeer_get(peer_info: schemas.PeerInfo, session: Session = Depends(g
     """
     Get peering information for given ASN.
     """
-    peer = (
-        session.query(models.PeerInfo)
-        .filter(models.PeerInfo.ASN == peer_info.ASN)
+    peer_info_internal = (
+        session.query(models.PeerInfoDB)
+        .filter(models.PeerInfoDB.ASN == peer_info.ASN)
         .first()
     )
-    logger.debug(f"Peer info: {peer}")
-    return {"message": f"Autopeering with ASN {peer_info.ASN}"}
+    if not peer_info_internal:
+        return {"message": f"No peer found with ASN {peer_info.ASN}"}
+    logger.debug(f"Peer info: {peer_info_internal}")
+    peer_info_sanitized = {
+        "ASN": peer_info_internal.ASN,
+        "PEER_IP": peer_info_internal.peer_ip,
+        "PEER_PORT": peer_info_internal.peer_port,
+        "PEER_PUBKEY": peer_info_internal.peer_pubkey,
+        "PEER_PSK": peer_info_internal.peer_psk,
+        "LINKLOCAL_IP4": peer_info_internal.ll_ip4,
+        "LINKLOCAL_IP6": peer_info_internal.ll_ip6,
+        "DN42_IP4": peer_info_internal.dn42_ip4,
+        "DN42_IP6": peer_info_internal.dn42_ip6,
+    }
+    return {"peer_info": json.dumps(peer_info_sanitized)}
 
 
 @app.post("/create")
