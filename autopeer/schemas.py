@@ -76,7 +76,7 @@ class PeerInfo(BaseModel):
         if self.dn42_ip4:
             ip_validate(self.dn42_ip4, DN42_SUBNET4)
         if self.dn42_ip6:
-            ip_validate(self.dn42_ip6, LL_SUBNET6)
+            ip_validate(self.dn42_ip6, DN42_SUBNET6)
         
         if not self.peer_pubkey:
             raise HTTPException(
