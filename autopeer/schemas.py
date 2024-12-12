@@ -5,7 +5,7 @@ from typing import Optional
 from fastapi import HTTPException
 from pydantic import BaseModel
 
-from autopeer import LL_SUBNET4, LL_SUBNET6
+from autopeer import LL_SUBNET4, LL_SUBNET6, DN42_SUBNET4, DN42_SUBNET6
 
 
 def ip_validate(ip: str, network: ipaddress.IPv4Network):
@@ -67,12 +67,16 @@ class PeerInfo(BaseModel):
                 status_code=400,
                 detail=f"IP address {self.peer_ip} is not a valid IP address",
             )
-        for ip4 in [self.peer_ll_ip4, self.suggest_ll_ip4, self.dn42_ip4]:
+        for ip4 in [self.peer_ll_ip4, self.suggest_ll_ip4]:
             if ip4:
                 ip_validate(ip4, LL_SUBNET4)
-        for ip6 in [self.peer_ll_ip6, self.suggest_ll_ip6, self.dn42_ip6]:
+        for ip6 in [self.peer_ll_ip6, self.suggest_ll_ip6]:
             if ip6:
                 ip_validate(ip6, LL_SUBNET6)
+        if self.dn42_ip4:
+            ip_validate(self.dn42_ip4, DN42_SUBNET4)
+        if self.dn42_ip6:
+            ip_validate(self.dn42_ip6, LL_SUBNET6)
         
         if not self.peer_pubkey:
             raise HTTPException(
