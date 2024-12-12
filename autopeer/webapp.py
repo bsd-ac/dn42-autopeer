@@ -177,6 +177,7 @@ async def autopeer_create(
 
     # add or update peer info
     session.merge(peer_info_db)
+    session.commit()
 
 
     # jinfo = {"command": "create", "peer_info": peer_info.model_dump()}
