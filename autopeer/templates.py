@@ -2,18 +2,16 @@ from jinja2 import Template
 
 hostname_wg = Template(
     """
-{% if rdomain is defined %}
 rdomain {{ rdomain }}
 
-{% endif %}
 inet {{ inet }}
 inet6 {{ inet6 }}
 
-mtu {{ mtu | default(1420) }}
+mtu {{ mtu }}
 up
 
 wgkey {{ wgkey }}
-wgport {{ wgport }}
+wgport {{ wg_base_port + wgid }}
 
 wgpeer {{ peer_pubkey }}{% if peer_psk is defined %} wgpsk {{ peer_psk }}{% endif %} wgendpoint {{ peer_ip }} {{ peer_port }}{% if peer_aip4 is defined %} wgaip {{ peer_aip4 }}{% endif %}{% if peer_aip6 is defined %} wgaip {{ peer_aip6 }}{% endif %} wgaip 172.20.0.0/14 wgaip fd00::/8
 
@@ -31,8 +29,12 @@ bgpd_peer_macros = Template(
     """
 {% for peer in peers %}
 P{{ loop.index }}_descr="{{ peer.description }}"
+{% if peer.dn42_ip4 is defined %}
 P{{ loop.index }}_remote4="{{ peer.dn42_ip4 }}"
+{% endif %}
+{% if peer.dn42_ip6 is defined %}
 P{{ loop.index }}_remote6="{{ peer.dn42_ip6 }}"
+{% endif %}
 P{{ loop.index }}_asn="{{ peer.asn }}"
 
 {% endfor %}

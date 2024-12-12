@@ -17,9 +17,17 @@ class Settings:
         self._registry_url = config.get("registry_url")
         self._database = os.path.join(config.get("db_dir"), "peers.db")
         self._db_engine = db.create_engine(f"sqlite:///{self.database}")
+        self._wg_base_port = config.get("wg_base_port")
+        self._ADMIN_ASN = config.get("ADMIN_ASN")
         self._session = sessionmaker(
             autocommit=False, autoflush=False, bind=self.db_engine
         )
+
+    @property
+    def ADMIN_ASN(self):
+        if not self._initialized:
+            raise ValueError("Settings not initialized")
+        return self._ADMIN_ASN
 
     @property
     def registry(self):
@@ -50,6 +58,12 @@ class Settings:
         if not self._initialized:
             raise ValueError("Settings not initialized")
         return self._db_engine
+    
+    @property
+    def wg_base_port(self):
+        if not self._initialized:
+            raise ValueError("Settings not initialized")
+        return self._wg_base_port
     
     @property
     def session(self):

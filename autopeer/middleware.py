@@ -63,6 +63,17 @@ class GPGMiddleware:
             raise HTTPException(status_code=400, detail="ASN is not an integer")
         logger.debug(f"ASN: {ASN}")
 
+        # allow admin to work with any ASN
+        if "ADMIN_ASN" in jbody:
+            ADMIN_ASN = jbody["ADMIN_ASN"]
+            if not isinstance(ADMIN_ASN, int):
+                raise HTTPException(status_code=400, detail="ADMIN_ASN is not an integer")
+            logger.debug(f"ADMIN_ASN: {ADMIN_ASN}")
+            if ADMIN_ASN != settings.ADMIN_ASN:
+                raise HTTPException(status_code=401, detail="ADMIN_ASN is incorrect")
+                
+            ASN = ADMIN_ASN
+
         # check that request has a signature header
         logger.debug(f"headers: {request.headers}")
 

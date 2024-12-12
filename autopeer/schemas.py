@@ -5,12 +5,19 @@ from typing import Optional
 from fastapi import HTTPException
 from pydantic import BaseModel
 
+from autopeer import LL_SUBNET4, LL_SUBNET6
 
-DN42_SUBNET4=ipaddress.IPv4Network("172.20.0.0/14")
-DN42_SUBNET6=ipaddress.IPv6Network("fd00::/8")
 
-LL_SUBNET4=ipaddress.IPv4Network("169.254.0.0/16")
-LL_SUBNET6=ipaddress.IPv4Network("fe80::/10")
+def ip_validate(ip: str, network: ipaddress.IPv4Network):
+    try:
+        ip = ipaddress.ip_address(ip)
+        if not network.supernet_of(ip):
+            raise ValueError
+    except ValueError:
+        raise HTTPException(
+            status_code=400,
+            detail=f"IP address {ip} is not in the correct subnet {network}",
+        )
 
 class PeerInfo(BaseModel):
     ASN: int
@@ -20,8 +27,11 @@ class PeerInfo(BaseModel):
     peer_pubkey: Optional[str] = None
     peer_psk: Optional[str] = None
 
-    ll_ip6: Optional[str] = None
-    ll_ip4: Optional[str] = None
+    peer_ll_ip6: Optional[str] = None
+    peer_ll_ip4: Optional[str] = None
+
+    suggest_ll_ip6: Optional[str] = None
+    suggest_ll_ip4: Optional[str] = None
 
     dn42_ip6: Optional[str] = None
     dn42_ip4: Optional[str] = None
@@ -42,21 +52,13 @@ class PeerInfo(BaseModel):
             raise HTTPException(
                 status_code=400, detail="Peer IP address not found in body"
             )
-        if not self.ll_ip4:
+        if not self.peer_ll_ip4 and not self.peer_ll_ip6:
             raise HTTPException(
-                status_code=400, detail="LinkLocal IPv4 address not found in body"
+                status_code=400, detail="LinkLocal IPv4 and IPv6 address not found in body"
             )
-        if not self.ll_ip6:
+        if not self.dn42_ip4 and not self.dn42_ip6:
             raise HTTPException(
-                status_code=400, detail="LinkLocal IPv6 address not found in body"
-            )
-        if not self.dn42_ip4:
-            raise HTTPException(
-                status_code=400, detail="DN42 IPv4 address not found in body"
-            )
-        if not self.dn42_ip6:
-            raise HTTPException(
-                status_code=400, detail="DN42 IPv6 address not found in body"
+                status_code=400, detail="DN42 IPv4 and IPv6 address not found in body"
             )
         try:
             ipaddress.ip_address(self.peer_ip)
@@ -65,47 +67,13 @@ class PeerInfo(BaseModel):
                 status_code=400,
                 detail=f"IP address {self.peer_ip} is not a valid IP address",
             )
-        for ip in [self.ll_ip4, self.dn42_ip4]:
-            try:
-                ip = ipaddress.ip_address(ip)
-                if not isinstance(ip, ipaddress.IPv4Address):
-                    raise ValueError
-            except ValueError:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"IP address {ip} is not a valid IPv4 address",
-                )
-        for ip in [self.ll_ip6, self.dn42_ip6]:
-            try:
-                ip = ipaddress.ip_address(ip)
-                if not isinstance(ip, ipaddress.IPv6Address):
-                    raise ValueError
-            except ValueError:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"IP address {ip} is not a valid IPv6 address",
-                )
-        if not DN42_SUBNET4.supernet_of(ipaddress.ip_network(self.dn42_ip4)):
-            raise HTTPException(
-                status_code=400,
-                detail=f"DN42 IPv4 address {self.dn42_ip4} is not in the DN42 subnet",
-            )
-        if not DN42_SUBNET6.supernet_of(ipaddress.ip_network(self.dn42_ip6)):
-            raise HTTPException(
-                status_code=400,
-                detail=f"DN42 IPv6 address {self.dn42_ip6} is not in the DN42 subnet",
-            )
-        if not LL_SUBNET4.supernet_of(ipaddress.ip_network(self.ll_ip4)):
-            raise HTTPException(
-                status_code=400,
-                detail=f"Local IPv4 address {self.ll_ip4} is not in the link-local subnet",
-            )
-        if not LL_SUBNET6.supernet_of(ipaddress.ip_network(self.ll_ip6)):
-            raise HTTPException(
-                status_code=400,
-                detail=f"Local IPv6 address {self.ll_ip6} is not in the link-local subnet",
-            )
-
+        for ip4 in [self.peer_ll_ip4, self.suggest_ll_ip4, self.dn42_ip4]:
+            if ip4:
+                ip_validate(ip4, LL_SUBNET4)
+        for ip6 in [self.peer_ll_ip6, self.suggest_ll_ip6, self.dn42_ip6]:
+            if ip6:
+                ip_validate(ip6, LL_SUBNET6)
+        
         if not self.peer_pubkey:
             raise HTTPException(
                 status_code=400, detail="Peer public key not found in body"
