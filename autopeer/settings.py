@@ -14,7 +14,7 @@ class Settings:
         self._initialized = True
 
         self._registry = config.get("registry")
-        self._registry_url = config.get("registry_url", "git@git.dn42.dev:dn42/registry.git")
+        self._registry_url = config.get("registry_url")
         self._database = os.path.join(config.get("db_dir"), "peers.db")
         self._db_engine = db.create_engine(f"sqlite:///{self.database}")
         self._session = sessionmaker(
