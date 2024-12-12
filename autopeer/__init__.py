@@ -16,4 +16,4 @@ DN42_SUBNET4=ipaddress.IPv4Network("172.20.0.0/14")
 DN42_SUBNET6=ipaddress.IPv6Network("fd00::/8")
 
 LL_SUBNET4=ipaddress.IPv4Network("169.254.0.0/16")
-LL_SUBNET6=ipaddress.IPv4Network("fe80::/10")
+LL_SUBNET6=ipaddress.IPv6Network("fe80::/10")
