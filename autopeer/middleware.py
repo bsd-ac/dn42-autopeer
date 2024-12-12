@@ -182,6 +182,7 @@ class TokenMiddleware:
         message: Message = await receive()
         assert message["type"] == "http.request"
 
+        logger.debug(f"Path: {request.url.path}")
         if request.url.path not in self.check_paths:
             return message
 
