@@ -11,7 +11,7 @@ from autopeer import LL_SUBNET4, LL_SUBNET6
 def ip_validate(ip: str, network: ipaddress.IPv4Network):
     try:
         ip = ipaddress.ip_address(ip)
-        if not network.supernet_of(ip):
+        if not ip in network:
             raise ValueError
     except ValueError:
         raise HTTPException(
