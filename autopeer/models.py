@@ -15,7 +15,6 @@ class PeerInfoDB(Base):
     wgid: Mapped[int] = mapped_column("WGID", nullable=False, unique=True)
 
     wg_privkey: Mapped[str] = mapped_column("WG_PRIVKEY", String(WG_KEYLEN), nullable=False, unique=True)
-    wg_psk: Mapped[str] = mapped_column("WG_PSK", String(WG_KEYLEN), nullable=True, unique=True)
 
     description: Mapped[str] = mapped_column("DESCRIPTION", String(WG_KEYLEN), nullable=False)
 
@@ -25,7 +24,7 @@ class PeerInfoDB(Base):
         "PEER_PUBKEY", String(WG_KEYLEN), nullable=False, unique=True
     )
     peer_psk: Mapped[str] = mapped_column(
-        "PEER_PSK", String(WG_KEYLEN), nullable=False, unique=True
+        "PEER_PSK", String(WG_KEYLEN), nullable=True, unique=True
     )
 
     peer_ll_ip4: Mapped[str] = mapped_column("PEER_LL_IP4", nullable=False, unique=True)

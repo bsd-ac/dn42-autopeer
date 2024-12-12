@@ -161,7 +161,6 @@ async def autopeer_create(
         ASN=peer_info.ASN,
         wgid=new_wgid,
         wg_privkey=wg_privkey,
-        wg_psk=peer_info.peer_psk,
         description=peer_info.description,
         peer_ip=peer_info.peer_ip,
         peer_port=peer_info.peer_port,
