@@ -20,7 +20,7 @@ class PeerInfoDB(Base):
         "PEER_PSK", String(30), nullable=False, unique=True
     )
 
-    wg_privkey: Mapped[str] = mapped_column("WG_PRIVKEY", nullable=False, unique=True)
+    wg_privkey: Mapped[str] = mapped_column("WG_PRIVKEY", String(30), nullable=False, unique=True)
 
     ll_ip4: Mapped[str] = mapped_column("LL_IP4", nullable=False, unique=True)
     ll_ip6: Mapped[str] = mapped_column("LL_IP6", nullable=False, unique=True)
