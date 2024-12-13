@@ -37,6 +37,12 @@ class PeerInfo(BaseModel):
     dn42_ip6: Optional[str] = None
     dn42_ip4: Optional[str] = None
 
+    use_ll_ip6: bool = False
+    use_ll_ip4: bool = False
+
+    mp_bgp: bool = False
+    extended_next_hop: bool = False
+
     def dn42_validate(self):
         if not self.description:
             self.description = f"Peer_{self.ASN}"

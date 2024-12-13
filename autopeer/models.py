@@ -39,3 +39,9 @@ class PeerInfoDB(Base):
 
     our_ll_ip4: Mapped[str] = mapped_column("OUR_LL_IP4", nullable=False, unique=True)
     our_ll_ip6: Mapped[str] = mapped_column("OUR_LL_IP6", nullable=False, unique=True)
+
+    use_ll_ip4: Mapped[bool] = mapped_column("USE_LL_IP4", nullable=False)
+    use_ll_ip6: Mapped[bool] = mapped_column("USE_LL_IP6", nullable=False)
+
+    mp_bgp: Mapped[bool] = mapped_column("MP_BGP", nullable=False)
+    extended_next_hop: Mapped[bool] = mapped_column("EXTENDED_NEXT_HOP", nullable=False)
