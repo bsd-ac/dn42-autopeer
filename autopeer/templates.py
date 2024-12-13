@@ -1,7 +1,7 @@
-from jinja2 import Template
+from jinja2 import StrictUndefined, Template
 
-hostname_wg = Template(
-    """
+hostname_wg = Template(undefined=StrictUndefined,
+    source="""
 rdomain {{ wg_rdomain }}
 
 inet {{ wg_ip4 }}
