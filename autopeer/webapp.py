@@ -190,13 +190,18 @@ async def autopeer_create(
     # session.commit()
 
 
-    jinfo = {"command": "create", "peer_info": peer_info.model_dump()}
+    jinfo = {"command": "wg_create", "peer_info": peer_info.model_dump()}
     pm_send(app.state.sock, jinfo)
     resp = pm_recv(app.state.sock)
 
     logger.debug(f"Received response: {resp}")
-
-    return {"message": f"Autopeering with ASN {peer_info.ASN}"}
+    if not resp.get("success", False):
+        raise HTTPException(
+            status_code=500,
+            detail=f'Error creating peer: {resp.get("error", "unknown error")}',
+        )
+    else:
+        return {"message": f"Autopeering with ASN {peer_info.ASN}"}
 
 
 @app.delete("/delete")
