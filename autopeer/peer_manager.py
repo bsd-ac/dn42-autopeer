@@ -87,7 +87,7 @@ class PeerManager:
 
     def wg_create(self, info: dict) -> dict:
         try:
-            peer_json = info["peer"]
+            peer_json = info["peer_info"]
             wg_interface_id = info["interface_id"]
             wg_rdomain = info["rdomain"]
             peer = PeerInfo.model_validate_json(peer_json)
