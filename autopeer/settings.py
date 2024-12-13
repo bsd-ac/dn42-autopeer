@@ -43,7 +43,7 @@ class Settings:
         if not self._initialized:
             raise ValueError("Settings not initialized")
         return self._wg_mtu
-    
+
     @property
     def wg_base_id(self):
         if not self._initialized:

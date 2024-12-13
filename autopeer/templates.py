@@ -40,7 +40,7 @@ P{{ loop.index }}_remote6="{{ peer.dn42_ip6 }}"
 P{{ loop.index }}_asn="{{ peer.asn }}"
 
 {% endfor %}
-"""
+""",
 )
 
 bgpd_peer_group = Template(
@@ -66,5 +66,5 @@ group "dn42_peers" {
 {% endif %}
 {% endfor %}
 }
-"""
+""",
 )
