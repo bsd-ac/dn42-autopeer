@@ -187,6 +187,8 @@ async def autopeer_create(
         "dn42_ip6": peer_info_internal.dn42_ip6,
     }
 
+    logger.debug(f"Creating peer: {wg_create_info}")
+
     jinfo = {"command": "wg_create", "peer_info": wg_create_info}
     pm_send(app.state.sock, jinfo)
     resp = pm_recv(app.state.sock)
