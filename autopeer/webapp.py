@@ -172,6 +172,10 @@ async def autopeer_create(
             dn42_ip6=peer_info.dn42_ip6,
             our_ll_ip4=peer_info.suggest_ll_ip4,
             our_ll_ip6=peer_info.suggest_ll_ip6,
+            use_ll_ip4=peer_info.use_ll_ip4,
+            use_ll_ip6=peer_info.use_ll_ip6,
+            mp_bgp=peer_info.mp_bgp,
+            extended_next_hop=peer_info.extended_next_hop,
         )
 
         # add or update peer info
@@ -201,6 +205,10 @@ async def autopeer_create(
         "our_ll_ip6": peer_info_internal.our_ll_ip6,
         "dn42_ip4": peer_info_internal.dn42_ip4,
         "dn42_ip6": peer_info_internal.dn42_ip6,
+        "use_ll_ip4": peer_info_internal.use_ll_ip4,
+        "use_ll_ip6": peer_info_internal.use_ll_ip6,
+        "mp_bgp": peer_info_internal.mp_bgp,
+        "extended_next_hop": peer_info_internal.extended_next_hop,
         "dn42_netspace4": f"{DN42_SUBNET4}",
         "dn42_netspace6": f"{DN42_SUBNET6}",
     }
