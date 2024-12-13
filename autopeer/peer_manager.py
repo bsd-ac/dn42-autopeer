@@ -94,7 +94,7 @@ class PeerManager:
             if not sp.returncode:
                 logger.error(f"Interface {wg_interface} already exists")
                 return {"success": False, "error": "Interface already exists"}
-            wg_file = f"/etc/hostname.wg{wg_interface}"
+            wg_file = f"/etc/hostname.{wg_interface}"
             wg_data = hostname_wg.render(**peer)
             logger.debug(f"Writing wireguard config file with data: {wg_data}")
             with open(wg_file, "w") as f:
