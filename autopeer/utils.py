@@ -10,7 +10,7 @@ from autopeer.logger import logger
 class Wireguard:
     @staticmethod
     def generate_privkey() -> str:
-        return base64.b64encode(os.urandom(32))
+        return base64.b64encode(os.urandom(32)).decode("utf-8")
 
 class Peer:
 
