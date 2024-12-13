@@ -204,7 +204,7 @@ async def autopeer_create(
             detail=f'Error creating peer: {resp.get("error", "unknown error")}',
         )
     else:
-        return {"message": f"Autopeering with ASN {peer_info.ASN}"}
+        return {"message": f"Autopeering with ASN {peer_info_internal.ASN}"}
 
 
 @app.delete("/delete")
