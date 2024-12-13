@@ -89,7 +89,7 @@ class PeerManager:
         try:
             peer = info["peer_info"]
             logger.debug("Creating peer: %s", peer)
-            wg_interface = f"wg{peer["wg_interface"]}"
+            wg_interface = f"wg{peer['wg_interface']}"
             sp = subprocess.run(["/sbin/ifconfig", f"{wg_interface}"], capture_output=True)
             if not sp.returncode:
                 logger.error(f"Interface {wg_interface} already exists")
