@@ -149,16 +149,17 @@ async def autopeer_create(
         # validate that peer information is valid
         peer_info.dn42_validate()
 
-        new_wgkey = Wireguard.generate_privkey()
         new_wgid = Peer.new_wgid(session)
+        new_wgkey = Wireguard.generate_privkey()
 
-        # TODO: add code to generate link local IPs if not provided
+        # TODO: add code to validate and generate link local IPs if not provided
 
         # convert peer_info to PeerInfoDB
         peer_info_db = models.PeerInfoDB(
             ASN=peer_info.ASN,
-            wgid=new_wgid,
+            wg_id=settings.wg_base_id + new_wgid,
             wg_privkey=new_wgkey,
+            wg_port=settings.wg_base_port + new_wgid,
             description=peer_info.description,
             peer_ip=peer_info.peer_ip,
             peer_port=peer_info.peer_port,
@@ -184,11 +185,11 @@ async def autopeer_create(
     wg_create_info = {
         "ASN": peer_info_internal.ASN,
         "description": peer_info_internal.description,
-        "wg_id": 101,  # TODO: peer_info_internal.wg_id,
+        "wg_id": peer_info_internal.wg_id,
         "wg_rdomain": settings.wg_rdomain,
         "wg_mtu": settings.wg_mtu,
         "wg_privkey": peer_info_internal.wg_privkey,
-        "wg_port": 2101,  # TODO: change to model based value
+        "wg_port": peer_info_internal.wg_port,
         "peer_ip": peer_info_internal.peer_ip,
         "peer_port": peer_info_internal.peer_port,
         "peer_pubkey": peer_info_internal.peer_pubkey,

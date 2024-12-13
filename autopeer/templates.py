@@ -2,7 +2,7 @@ from jinja2 import StrictUndefined, Template
 
 hostname_wg = Template(
     undefined=StrictUndefined,
-    source="""
+    source="""\
 rdomain {{ wg_rdomain }}
 
 inet {{ our_ll_ip4 }}
@@ -27,7 +27,8 @@ wgpeer {{ peer_pubkey }}{% if peer_psk is defined %} wgpsk {{ peer_psk }}{% endi
 )
 
 bgpd_peer_macros = Template(
-    """
+    undefined=StrictUndefined,
+    source="""\
 {% for peer in peers %}
 P{{ loop.index }}_descr="{{ peer.description }}"
 {% if peer.dn42_ip4 is defined %}
@@ -43,7 +44,8 @@ P{{ loop.index }}_asn="{{ peer.asn }}"
 )
 
 bgpd_peer_group = Template(
-    """
+    undefined=StrictUndefined,
+    source="""\
 group "dn42_peers" {
         announce IPv4 unicast
         announce IPv6 unicast
