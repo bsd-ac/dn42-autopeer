@@ -191,6 +191,9 @@ async def autopeer_create(
         "dn42_netspace6": f"{DN42_SUBNET6}",
     }
 
+    # remove None values
+    wg_create_info = {k: v for k, v in wg_create_info.items() if v is not None}
+
     logger.debug(f"Creating peer: {wg_create_info}")
 
     jinfo = {"command": "wg_create", "peer_info": wg_create_info}
