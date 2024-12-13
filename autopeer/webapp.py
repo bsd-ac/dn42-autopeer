@@ -235,17 +235,30 @@ async def autopeer_delete(
     Delete peering session with the given ASN.
     """
     logger.debug(f"Peer info: {peer_info}")
-    # jinfo = {"command": "delete", "ASN": peer_info.ASN}
-    # pm_send(app.state.sock, jinfo)
-    # try:
-    #     resp = pm_recv()
-    # except Exception as e:
-    #     raise HTTPException(status_code=500, detail=f"Error deleting peer: {e}")
 
-    # success = resp.get("success", False)
-    # if not success:
-    #     raise HTTPException(
-    #         status_code=500,
-    #         detail=f'Error deleting peer: {resp.get("message", "unknown error")}',
-    #     )
+    logger.debug(f"Checking if peer exists: {peer_info.ASN}")
+    try:
+        peer_info_internal = Peer.get(session, peer_info.ASN)
+    except KeyError:
+        return {"message": f"No peer found with ASN {peer_info.ASN}"}
+
+    # TODO: remove later
+    del peer_info
+
+    wg_delete_info = {
+        "ASN": peer_info.ASN,
+        "wg_id": peer_info_internal.wg_id,
+        "wg_interface": settings.wg_base_interface + peer_info_internal.wg_id,
+    }
+
+    jinfo = {"command": "wg_delete", "peer_info": wg_delete_info}
+    pm_send(app.state.sock, jinfo)
+    resp = pm_recv()
+
+    success = resp.get("success", False)
+    if not success:
+        raise HTTPException(
+            status_code=500,
+            detail=f'Error deleting peer: {resp.get("message", "unknown error")}',
+        )
     return {"success": True, "message": f"ASN {peer_info.ASN} deleted"}

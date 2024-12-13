@@ -114,30 +114,25 @@ class PeerManager:
 
     def wg_delete(self, info: dict) -> dict:
         try:
-            peer_json = info["peer"]
-            peer = PeerInfo.model_validate_json(peer_json)
+            peer = info["peer"]
             logger.debug("Deleting peer: %s", peer)
-            peer.dn42_validate()
-            wg_file = f"/etc/wireguard/wg{peer['wgid']}.conf"
+            wg_interface = f"wg{peer['wg_interface']}"
+            wg_file = f"/etc/hostname.{wg_interface}"
             if os.path.isfile(wg_file):
                 logger.debug(f"Deleting wireguard config file {wg_file}")
                 os.unlink(wg_file)
             else:
                 logger.warning(f"Wireguard hostname file {wg_file} does not exist")
-            wg_if = f"wg{peer['wgid']}"
-            sp = subprocess.run(["/sbin/ifconfig", f"{wg_if}"], capture_output=True)
-            if not sp.returncode:
+            if self.wg_exists(info)["success"]:
                 sp = subprocess.run(
-                    ["/sbin/ifconfig", f"{wg_if}", "destroy"], capture_output=True
+                    ["/sbin/ifconfig", f"{wg_interface}", "destroy"], capture_output=True
                 )
                 if sp.returncode:
                     logger.debug(
-                        f"Failed to destroy interface {wg_if}: {sp.stderr.decode()}"
+                        f"Failed to destroy interface {wg_interface}: {sp.stderr.decode()}"
                     )
                     logger.debug(f"Debug output: {sp.stdout.decode()}")
                     return {"success": False, "error": "Failed to destroy interface"}
-            else:
-                logger.warning(f"Interface {wg_if} does not exist")
         except HTTPException as e:
             return {"success": False, "error": e.detail}
         except Exception as e:
