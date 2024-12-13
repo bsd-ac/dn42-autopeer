@@ -60,20 +60,20 @@ class PeerInfo(BaseModel):
                     status_code=400,
                     detail="LinkLocal IPv4 address not found in body",
                 )
-            elif not self.dn42_ip4:
-                raise HTTPException(
-                    status_code=400, detail="DN42 IPv4 address not found in body"
-                )
+        elif not self.dn42_ip4:
+            raise HTTPException(
+                status_code=400, detail="DN42 IPv4 address not found in body"
+            )
         if self.use_ll_ip6:
             if not self.peer_ll_ip6:
                 raise HTTPException(
                     status_code=400,
                     detail="LinkLocal IPv6 address not found in body",
                 )
-            elif not self.dn42_ip6:
-                raise HTTPException(
-                    status_code=400, detail="DN42 IPv6 address not found in body"
-                )
+        elif not self.dn42_ip6:
+            raise HTTPException(
+                status_code=400, detail="DN42 IPv6 address not found in body"
+            )
         if self.peer_ip:
             try:
                 ipaddress.ip_address(self.peer_ip)
