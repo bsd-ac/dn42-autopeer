@@ -87,13 +87,10 @@ class PeerManager:
 
     def wg_create(self, info: dict) -> dict:
         try:
-            peer_json = info["peer_info"]
-            wg_interface_id = info["interface_id"]
-            wg_rdomain = info["rdomain"]
-            peer = PeerInfo.model_validate_json(peer_json)
+            peer = info["peer_info"]
             logger.debug("Creating peer: %s", peer)
-            peer.dn42_validate()
-            wg_if = f"wg{peer['wgid']}"
+            wg_id = peer["wg_id"]
+            wg_if = f"wg{wg_id}"
             sp = subprocess.run(["/sbin/ifconfig", f"{wg_if}"], capture_output=True)
             if not sp.returncode:
                 logger.error(f"Interface {wg_if} already exists")

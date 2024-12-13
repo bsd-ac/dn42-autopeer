@@ -1,7 +1,44 @@
+import base64
 import os
 
+from sqlalchemy.orm import Session
+
+from autopeer import models
 from autopeer.logger import logger
 
+
+class Wireguard:
+    @staticmethod
+    def generate_privkey() -> str:
+        return base64.b64encode(os.urandom(32))
+
+class Peer:
+
+    @staticmethod
+    def get(session: Session, asn: int) -> models.PeerInfoDB:
+        peer_info_internal = (
+            session.query(models.PeerInfoDB)
+            .filter(models.PeerInfoDB.ASN == asn)
+            .first()
+        )
+        if not peer_info_internal:
+            raise RuntimeError(f"Peer with ASN {asn} does not exist")
+        return peer_info_internal
+
+    @staticmethod
+    def exists(session: Session, asn: int) -> bool:
+        try:
+            Peer.get(session, asn)
+            return True
+        except Exception:
+            return False
+        
+    @staticmethod
+    def new_wgid(session: Session) -> int:
+        max_wgid = session.query(models.PeerInfoDB).order_by(models.PeerInfoDB.wgid.desc()).first()
+        if max_wgid:
+            return max_wgid.wgid + 1
+        return 1
 
 class DN42:
 

@@ -19,6 +19,7 @@ class Settings:
         self._db_engine = db.create_engine(f"sqlite:///{self.database}")
         self._wg_base_port = config.get("wg_base_port")
         self._ADMIN_ASN = config.get("ADMIN_ASN")
+        self._wg_rdomain = config.get("wg_rdomain")
         self._session = sessionmaker(
             autocommit=False, autoflush=False, bind=self.db_engine
         )
@@ -28,6 +29,12 @@ class Settings:
         if not self._initialized:
             raise ValueError("Settings not initialized")
         return self._ADMIN_ASN
+    
+    @property
+    def wg_rdomain(self):
+        if not self._initialized:
+            raise ValueError("Settings not initialized")
+        return self._wg_rdomain
 
     @property
     def registry(self):
