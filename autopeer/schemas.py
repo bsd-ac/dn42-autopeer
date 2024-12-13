@@ -54,11 +54,26 @@ class PeerInfo(BaseModel):
                 )
 
         # check that all peer ip are valid IPv4/IPv6 address
-        if not self.peer_ll_ip4 and not self.peer_ll_ip6:
-            raise HTTPException(
-                status_code=400,
-                detail="LinkLocal IPv4 and IPv6 address not found in body",
-            )
+        if self.use_ll_ip4:
+            if not self.peer_ll_ip4:
+                raise HTTPException(
+                    status_code=400,
+                    detail="LinkLocal IPv4 address not found in body",
+                )
+            elif not self.dn42_ip4:
+                raise HTTPException(
+                    status_code=400, detail="DN42 IPv4 address not found in body"
+                )
+        if self.use_ll_ip6:
+            if not self.peer_ll_ip6:
+                raise HTTPException(
+                    status_code=400,
+                    detail="LinkLocal IPv6 address not found in body",
+                )
+            elif not self.dn42_ip6:
+                raise HTTPException(
+                    status_code=400, detail="DN42 IPv6 address not found in body"
+                )
         if not self.dn42_ip4 and not self.dn42_ip6:
             raise HTTPException(
                 status_code=400, detail="DN42 IPv4 and IPv6 address not found in body"
@@ -90,5 +105,5 @@ class PeerInfo(BaseModel):
             pubkey_bytes = base64.b64decode(self.peer_pubkey)
         except Exception as e:
             raise HTTPException(
-                status_code=400, detail=f"Public key is not a valid base64"
+                status_code=400, detail=f"Public key is not a valid base64: {e}"
             )
