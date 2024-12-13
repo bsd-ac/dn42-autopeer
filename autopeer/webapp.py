@@ -191,10 +191,10 @@ async def autopeer_create(
 
 
     jinfo = {"command": "create", "peer_info": peer_info.model_dump()}
-    # pm_send(app.state.sock, jinfo)
-    # resp = pm_recv(app.state.sock)
+    pm_send(app.state.sock, jinfo)
+    resp = pm_recv(app.state.sock)
 
-    # logger.debug(f"Received response: {resp}")
+    logger.debug(f"Received response: {resp}")
 
     return {"message": f"Autopeering with ASN {peer_info.ASN}"}
 
