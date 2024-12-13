@@ -170,10 +170,10 @@ async def autopeer_create(
     del peer_info
 
     wg_create_info = {
-        "rdomain": settings.wg_rdomain,
         "ASN": peer_info_internal.ASN,
         "description": peer_info_internal.description,
         "wg_id": peer_info_internal.wg_id,
+        "wg_rdomain": settings.wg_rdomain,
         "wg_privkey": peer_info_internal.wg_privkey.decode('utf-8'),
         "peer_ip": peer_info_internal.peer_ip,
         "peer_port": peer_info_internal.peer_port,
