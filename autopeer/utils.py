@@ -23,7 +23,7 @@ class Peer:
             .first()
         )
         if not peer_info_internal:
-            raise RuntimeError(f"Peer with ASN {asn} does not exist")
+            raise KeyError(f"Peer with ASN {asn} does not exist")
         return peer_info_internal
 
     @staticmethod

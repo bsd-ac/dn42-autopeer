@@ -144,8 +144,9 @@ async def autopeer_create(
     logger.debug(f"Peer info: {peer_info}")
 
     logger.debug(f"Checking if peer exists: {peer_info.ASN}")
-    peer_info_internal = Peer.get(session, peer_info.ASN)
-    if not peer_info_internal:
+    try:
+        peer_info_internal = Peer.get(session, peer_info.ASN)
+    except KeyError:
         # validate that peer information is valid
         peer_info.dn42_validate()
 
