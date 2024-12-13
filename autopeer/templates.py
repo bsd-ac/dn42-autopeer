@@ -13,7 +13,7 @@ up
 wgkey {{ wg_privkey }}
 wgport {{ wg_port }}
 
-wgpeer {{ peer_pubkey }}{% if peer_psk is defined %} wgpsk {{ peer_psk }}{% endif %}{% if peer_ip is defined %} wgendpoint {{ peer_ip }} {{ peer_port }}{% endif %}{% if peer_ll_ip4 is defined %} wgaip {{ peer_ll_ip4 }}/32{% endif %}{% if peer_ll_ip6 is defined %} wgaip {{ peer_ll_ip6 }}/128{% endif %} wgaip {{ dn42_ip4 }} wgaip {{ dn42_ip6 }}
+wgpeer {{ peer_pubkey }}{% if peer_psk is defined %} wgpsk {{ peer_psk }}{% endif %}{% if peer_ip is defined %} wgendpoint {{ peer_ip }} {{ peer_port }}{% endif %}{% if peer_ll_ip4 is defined %} wgaip {{ peer_ll_ip4 }}/32{% endif %}{% if peer_ll_ip6 is defined %} wgaip {{ peer_ll_ip6 }}/128{% endif %} wgaip {{ dn42_netspace4 }} wgaip {{ dn42_netspace6 }}
 
 {% if peer_ll_ip4 is defined %}
 !route -n -T {{ wg_rdomain }} add -inet -iface {{ peer_ll_ip4 }} {{ our_ll_ip4 }}

@@ -13,7 +13,7 @@ from git import Repo
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from autopeer import cache, max_bytes, models, schemas, settings, sp
+from autopeer import DN42_SUBNET4, DN42_SUBNET6, cache, max_bytes, models, schemas, settings, sp
 from autopeer.logger import logger
 from autopeer.middleware import GPGMiddleware, TokenMiddleware
 from autopeer.utils import Peer, Wireguard
@@ -187,6 +187,8 @@ async def autopeer_create(
         "our_ll_ip6": peer_info_internal.our_ll_ip6,
         "dn42_ip4": peer_info_internal.dn42_ip4,
         "dn42_ip6": peer_info_internal.dn42_ip6,
+        "dn42_netspace4": f"{DN42_SUBNET4}",
+        "dn42_netspace6": f"{DN42_SUBNET6}",
     }
 
     logger.debug(f"Creating peer: {wg_create_info}")
