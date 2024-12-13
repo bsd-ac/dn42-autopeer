@@ -47,18 +47,13 @@ class PeerInfo(BaseModel):
         if not self.description:
             self.description = f"Peer_{self.ASN}"
 
-        if not self.peer_port:
-            raise HTTPException(status_code=400, detail="Peer port not found in body")
-        if self.peer_port < 0 or self.peer_port > 65535:
-            raise HTTPException(
-                status_code=400, detail="Peer port is not a valid port number"
-            )
+        if self.peer_port:
+            if self.peer_port < 0 or self.peer_port > 65535:
+                raise HTTPException(
+                    status_code=400, detail="Peer port is not a valid port number"
+                )
 
         # check that all peer ip are valid IPv4/IPv6 address
-        if not self.peer_ip:
-            raise HTTPException(
-                status_code=400, detail="Peer IP address not found in body"
-            )
         if not self.peer_ll_ip4 and not self.peer_ll_ip6:
             raise HTTPException(
                 status_code=400,
@@ -68,13 +63,14 @@ class PeerInfo(BaseModel):
             raise HTTPException(
                 status_code=400, detail="DN42 IPv4 and IPv6 address not found in body"
             )
-        try:
-            ipaddress.ip_address(self.peer_ip)
-        except ValueError:
-            raise HTTPException(
-                status_code=400,
-                detail=f"IP address {self.peer_ip} is not a valid IP address",
-            )
+        if self.peer_ip:
+            try:
+                ipaddress.ip_address(self.peer_ip)
+            except ValueError:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"IP address {self.peer_ip} is not a valid IP address",
+                )
         for ip4 in [self.peer_ll_ip4, self.suggest_ll_ip4]:
             if ip4:
                 ip_validate(ip4, LL_SUBNET4)
