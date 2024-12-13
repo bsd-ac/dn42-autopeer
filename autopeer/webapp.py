@@ -175,7 +175,7 @@ async def autopeer_create(
         "wg_id": 101, # TODO: peer_info_internal.wg_id,
         "wg_rdomain": settings.wg_rdomain,
         "wg_mtu": settings.wg_mtu,
-        "wg_privkey": peer_info_internal.wg_privkey.decode('utf-8'),
+        "wg_privkey": peer_info_internal.wg_privkey,
         "wg_port": 2101, # TODO: change to model based value
         "peer_ip": peer_info_internal.peer_ip,
         "peer_port": peer_info_internal.peer_port,
