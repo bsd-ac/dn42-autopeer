@@ -19,7 +19,7 @@ class Settings:
         self._db_engine = db.create_engine(f"sqlite:///{self.database}")
         self._ADMIN_ASN = config.get("ADMIN_ASN")
         self._wg_base_port = config.get("wg_base_port", 2100)
-        self._wg_base_id = config.get("wg_base_id", 100)
+        self._wg_base_interface = config.get("wg_base_interface", 100)
         self._wg_rdomain = config.get("wg_rdomain", 42)
         self._wg_mtu = config.get("wg_mtu", 1420)
         self._session = sessionmaker(
@@ -45,10 +45,10 @@ class Settings:
         return self._wg_mtu
 
     @property
-    def wg_base_id(self):
+    def wg_base_interface(self):
         if not self._initialized:
             raise ValueError("Settings not initialized")
-        return self._wg_base_id
+        return self._wg_base_interface
 
     @property
     def wg_base_port(self):

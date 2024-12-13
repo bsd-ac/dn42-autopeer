@@ -158,7 +158,8 @@ async def autopeer_create(
         # convert peer_info to PeerInfoDB
         peer_info_db = models.PeerInfoDB(
             ASN=peer_info.ASN,
-            wg_id=settings.wg_base_id + new_wgid,
+            wg_id=new_wgid,
+            wg_interface=settings.wg_base_interface + new_wgid,
             wg_privkey=new_wgkey,
             wg_port=settings.wg_base_port + new_wgid,
             description=peer_info.description,

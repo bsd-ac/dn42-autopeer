@@ -3,7 +3,7 @@ import os
 
 from sqlalchemy.orm import Session
 
-from autopeer import models
+from autopeer import models, settings
 from autopeer.logger import logger
 
 

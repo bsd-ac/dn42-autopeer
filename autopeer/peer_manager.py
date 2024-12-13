@@ -89,23 +89,22 @@ class PeerManager:
         try:
             peer = info["peer_info"]
             logger.debug("Creating peer: %s", peer)
-            wg_id = peer["wg_id"]
-            wg_if = f"wg{wg_id}"
-            sp = subprocess.run(["/sbin/ifconfig", f"{wg_if}"], capture_output=True)
+            wg_interface = f"wg{peer["wg_interface"]}"
+            sp = subprocess.run(["/sbin/ifconfig", f"{wg_interface}"], capture_output=True)
             if not sp.returncode:
-                logger.error(f"Interface {wg_if} already exists")
+                logger.error(f"Interface {wg_interface} already exists")
                 return {"success": False, "error": "Interface already exists"}
-            wg_file = f"/etc/hostname.wg{wg_id}"
+            wg_file = f"/etc/hostname.wg{wg_interface}"
             wg_data = hostname_wg.render(**peer)
             logger.debug(f"Writing wireguard config file with data: {wg_data}")
             with open(wg_file, "w") as f:
                 f.write(wg_data)
             sp = subprocess.run(
-                ["/bin/sh", "/etc/netstart", f"{wg_if}"], capture_output=True
+                ["/bin/sh", "/etc/netstart", f"{wg_interface}"], capture_output=True
             )
             if sp.returncode:
                 logger.error(
-                    f"Failed to create interface {wg_if}: {sp.stderr.decode()}"
+                    f"Failed to create interface {wg_interface}: {sp.stderr.decode()}"
                 )
                 logger.debug(f"Debug output: {sp.stdout.decode()}")
                 return {"success": False, "error": "Failed to create interface"}

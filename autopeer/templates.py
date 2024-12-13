@@ -20,7 +20,7 @@ wgpeer {{ peer_pubkey }}{% if peer_psk is defined %} wgpsk {{ peer_psk }}{% endi
 !route -n -T {{ wg_rdomain }} add -inet -iface {{ peer_ll_ip4 }} {{ our_ll_ip4 }}
 {% endif %}
 {% if peer_ll_ip6 is defined %}
-!route -n -T {{ wg_rdomain }} add -inet6 {{ peer_ll_ip6 }} {{ our_ll_ip6 }}%wg{{ wg_id }}
+!route -n -T {{ wg_rdomain }} add -inet6 {{ peer_ll_ip6 }} {{ our_ll_ip6 }}%{{ wg_interface }}
 {% endif %}
 !route -n -T {{ wg_rdomain }} sourceaddr -ifp lo{{ wg_rdomain }}
 """,
