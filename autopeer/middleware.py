@@ -67,11 +67,13 @@ class GPGMiddleware:
         if "ADMIN_ASN" in jbody:
             ADMIN_ASN = jbody["ADMIN_ASN"]
             if not isinstance(ADMIN_ASN, int):
-                raise HTTPException(status_code=400, detail="ADMIN_ASN is not an integer")
+                raise HTTPException(
+                    status_code=400, detail="ADMIN_ASN is not an integer"
+                )
             logger.debug(f"ADMIN_ASN: {ADMIN_ASN}")
             if ADMIN_ASN != settings.ADMIN_ASN:
                 raise HTTPException(status_code=401, detail="ADMIN_ASN is incorrect")
-                
+
             ASN = ADMIN_ASN
 
         # check that request has a signature header
@@ -173,7 +175,7 @@ class TokenMiddleware:
     If the path is not in the check_paths, the request is passed through.
     """
 
-    def __init__(self, app: ASGIApp, gpg: gnupg.GPG = None, check_paths = []) -> None:
+    def __init__(self, app: ASGIApp, gpg: gnupg.GPG = None, check_paths=[]) -> None:
         self.app = app
         self.gpg = gnupg.GPG() if gpg is None else gpg
         self.check_paths = check_paths

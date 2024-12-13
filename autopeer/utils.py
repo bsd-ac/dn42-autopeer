@@ -12,6 +12,7 @@ class Wireguard:
     def generate_privkey() -> str:
         return base64.b64encode(os.urandom(32)).decode("utf-8")
 
+
 class Peer:
 
     @staticmethod
@@ -32,13 +33,18 @@ class Peer:
             return True
         except Exception:
             return False
-        
+
     @staticmethod
     def new_wgid(session: Session) -> int:
-        max_wgid = session.query(models.PeerInfoDB).order_by(models.PeerInfoDB.wgid.desc()).first()
+        max_wgid = (
+            session.query(models.PeerInfoDB)
+            .order_by(models.PeerInfoDB.wgid.desc())
+            .first()
+        )
         if max_wgid:
             return max_wgid.wgid + 1
         return 1
+
 
 class DN42:
 

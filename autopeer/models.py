@@ -13,9 +13,13 @@ class PeerInfoDB(Base):
     ASN: Mapped[int] = mapped_column("ASN", primary_key=True)
 
     wg_id: Mapped[int] = mapped_column("WGID", nullable=False, unique=True)
-    wg_privkey: Mapped[str] = mapped_column("WG_PRIVKEY", String(WG_KEYLEN), nullable=False, unique=True)
+    wg_privkey: Mapped[str] = mapped_column(
+        "WG_PRIVKEY", String(WG_KEYLEN), nullable=False, unique=True
+    )
 
-    description: Mapped[str] = mapped_column("DESCRIPTION", String(WG_KEYLEN), nullable=False)
+    description: Mapped[str] = mapped_column(
+        "DESCRIPTION", String(WG_KEYLEN), nullable=False
+    )
 
     peer_ip: Mapped[str] = mapped_column("PEER_IP", nullable=False, unique=True)
     peer_port: Mapped[int] = mapped_column("PEER_PORT", nullable=False)

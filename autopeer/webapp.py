@@ -13,18 +13,29 @@ from git import Repo
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from autopeer import DN42_SUBNET4, DN42_SUBNET6, cache, max_bytes, models, schemas, settings, sp
+from autopeer import (
+    DN42_SUBNET4,
+    DN42_SUBNET6,
+    cache,
+    max_bytes,
+    models,
+    schemas,
+    settings,
+    sp,
+)
 from autopeer.logger import logger
 from autopeer.middleware import GPGMiddleware, TokenMiddleware
 from autopeer.utils import Peer, Wireguard
 
 scheduler = AsyncIOScheduler()
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     scheduler.start()
     yield
     scheduler.shutdown()
+
 
 @scheduler.scheduled_job("interval", minutes=5)
 def git_update():
@@ -36,6 +47,7 @@ def git_update():
     repo = Repo(settings.registry)
     repo.remotes.origin.pull()
     logger.debug("Registry updated")
+
 
 app = FastAPI(lifespan=lifespan)
 app.add_middleware(GPGMiddleware, settings=settings)
@@ -165,18 +177,18 @@ async def autopeer_create(
         session.commit()
 
         peer_info_internal = Peer.get(session, peer_info.ASN)
-    
+
     # TODO: remove later
     del peer_info
 
     wg_create_info = {
         "ASN": peer_info_internal.ASN,
         "description": peer_info_internal.description,
-        "wg_id": 101, # TODO: peer_info_internal.wg_id,
+        "wg_id": 101,  # TODO: peer_info_internal.wg_id,
         "wg_rdomain": settings.wg_rdomain,
         "wg_mtu": settings.wg_mtu,
         "wg_privkey": peer_info_internal.wg_privkey,
-        "wg_port": 2101, # TODO: change to model based value
+        "wg_port": 2101,  # TODO: change to model based value
         "peer_ip": peer_info_internal.peer_ip,
         "peer_port": peer_info_internal.peer_port,
         "peer_pubkey": peer_info_internal.peer_pubkey,

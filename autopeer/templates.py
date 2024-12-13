@@ -1,6 +1,7 @@
 from jinja2 import StrictUndefined, Template
 
-hostname_wg = Template(undefined=StrictUndefined,
+hostname_wg = Template(
+    undefined=StrictUndefined,
     source="""
 rdomain {{ wg_rdomain }}
 
@@ -22,7 +23,7 @@ wgpeer {{ peer_pubkey }}{% if peer_psk is defined %} wgpsk {{ peer_psk }}{% endi
 !route -n -T {{ wg_rdomain }} add -inet6 {{ peer_ll_ip6 }} {{ our_ll_ip6 }}%wg{{ wg_id }}
 {% endif %}
 !route -n -T {{ wg_rdomain }} sourceaddr -ifp lo{{ wg_rdomain }}
-"""
+""",
 )
 
 bgpd_peer_macros = Template(

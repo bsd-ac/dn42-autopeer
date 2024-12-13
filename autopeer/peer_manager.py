@@ -157,7 +157,7 @@ class PeerManager:
                 peer.dn42_validate()
             bgpd_file = "/etc/bgpd.conf"
             bgpd_tmp_file = "/tmp/bgpd.conf"
-            bgpd_data = "" # bgpd_conf.render(peers=peers)
+            bgpd_data = ""  # bgpd_conf.render(peers=peers)
             # write to temp file first
             with open(bgpd_tmp_file, "w") as f:
                 f.write(bgpd_data)

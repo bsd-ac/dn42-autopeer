@@ -19,6 +19,7 @@ def ip_validate(ip: str, network: ipaddress.IPv4Network):
             detail=f"IP address {ip} is not in the correct subnet {network}",
         )
 
+
 class PeerInfo(BaseModel):
     ASN: int
     description: Optional[str] = None
@@ -54,7 +55,8 @@ class PeerInfo(BaseModel):
             )
         if not self.peer_ll_ip4 and not self.peer_ll_ip6:
             raise HTTPException(
-                status_code=400, detail="LinkLocal IPv4 and IPv6 address not found in body"
+                status_code=400,
+                detail="LinkLocal IPv4 and IPv6 address not found in body",
             )
         if not self.dn42_ip4 and not self.dn42_ip6:
             raise HTTPException(
@@ -77,7 +79,7 @@ class PeerInfo(BaseModel):
             ip_validate(self.dn42_ip4, DN42_SUBNET4)
         if self.dn42_ip6:
             ip_validate(self.dn42_ip6, DN42_SUBNET6)
-        
+
         if not self.peer_pubkey:
             raise HTTPException(
                 status_code=400, detail="Peer public key not found in body"

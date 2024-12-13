@@ -30,13 +30,13 @@ class Settings:
         if not self._initialized:
             raise ValueError("Settings not initialized")
         return self._ADMIN_ASN
-    
+
     @property
     def wg_rdomain(self):
         if not self._initialized:
             raise ValueError("Settings not initialized")
         return self._wg_rdomain
-    
+
     @property
     def wg_mtu(self):
         if not self._initialized:
@@ -48,37 +48,37 @@ class Settings:
         if not self._initialized:
             raise ValueError("Settings not initialized")
         return self._registry
-    
+
     @property
     def registry_url(self):
         if not self._initialized:
             raise ValueError("Settings not initialized")
         return self._registry_url
-    
+
     @property
     def db_dir(self):
         if not self._initialized:
             raise ValueError("Settings not initialized")
         return self._db_dir
-    
+
     @property
     def database(self):
         if not self._initialized:
             raise ValueError("Settings not initialized")
         return self._database
-    
+
     @property
     def db_engine(self):
         if not self._initialized:
             raise ValueError("Settings not initialized")
         return self._db_engine
-    
+
     @property
     def wg_base_port(self):
         if not self._initialized:
             raise ValueError("Settings not initialized")
         return self._wg_base_port
-    
+
     @property
     def session(self):
         if not self._initialized:
