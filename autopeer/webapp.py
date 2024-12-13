@@ -221,7 +221,7 @@ async def autopeer_create(
     if not resp.get("success", False):
         raise HTTPException(
             status_code=500,
-            detail=f'Error creating peer: {resp.get("error", "unknown error")}',
+            detail=f'Error creating wireguard interface: {resp.get("error", "unknown error")}',
         )
     else:
         return {"message": f"Autopeering with ASN {peer_info_internal.ASN}"}

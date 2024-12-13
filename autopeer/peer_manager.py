@@ -76,10 +76,9 @@ class PeerManager:
 
     def wg_exists(self, info: dict) -> dict:
         try:
-            peer_json = info["peer"]
-            peer = PeerInfo.model_validate_json(peer_json)
-            wg_if = f"wg{peer.wgid}"
-            sp = subprocess.run(["/sbin/ifconfig", wg_if], capture_output=True)
+            peer = info["peer_info"]
+            wg_interface = f"wg{peer['wg_interface']}"
+            sp = subprocess.run(["/sbin/ifconfig", f"{wg_interface}"], capture_output=True)
             return {"success": not sp.returncode}
         except Exception as e:
             logger.error(f"Failed to check if interface exists: {e}")
@@ -90,13 +89,11 @@ class PeerManager:
             peer = info["peer_info"]
             logger.debug("Creating peer: %s", peer)
             wg_interface = f"wg{peer['wg_interface']}"
-            sp = subprocess.run(["/sbin/ifconfig", f"{wg_interface}"], capture_output=True)
-            if not sp.returncode:
+            if self.wg_exists(info):
                 logger.error(f"Interface {wg_interface} already exists")
                 return {"success": False, "error": "Interface already exists"}
             wg_file = f"/etc/hostname.{wg_interface}"
             wg_data = hostname_wg.render(**peer)
-            logger.debug(f"Writing wireguard config file with data: {wg_data}")
             with open(wg_file, "w") as f:
                 f.write(wg_data)
             sp = subprocess.run(
