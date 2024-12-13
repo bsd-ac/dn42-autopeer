@@ -19,7 +19,8 @@ class Settings:
         self._db_engine = db.create_engine(f"sqlite:///{self.database}")
         self._wg_base_port = config.get("wg_base_port")
         self._ADMIN_ASN = config.get("ADMIN_ASN")
-        self._wg_rdomain = config.get("wg_rdomain")
+        self._wg_rdomain = config.get("wg_rdomain", 42)
+        self._wg_mtu = config.get("wg_mtu", 1420)
         self._session = sessionmaker(
             autocommit=False, autoflush=False, bind=self.db_engine
         )
@@ -35,6 +36,12 @@ class Settings:
         if not self._initialized:
             raise ValueError("Settings not initialized")
         return self._wg_rdomain
+    
+    @property
+    def wg_mtu(self):
+        if not self._initialized:
+            raise ValueError("Settings not initialized")
+        return self._wg_mtu
 
     @property
     def registry(self):
