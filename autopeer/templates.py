@@ -2,26 +2,26 @@ from jinja2 import Template
 
 hostname_wg = Template(
     """
-rdomain {{ rdomain }}
+rdomain {{ wg_rdomain }}
 
-inet {{ inet }}
-inet6 {{ inet6 }}
+inet {{ wg_ip4 }}
+inet6 {{ wg_ip6 }}
 
-mtu {{ mtu }}
+mtu {{ wg_mtu }}
 up
 
-wgkey {{ wgkey }}
-wgport {{ wg_base_port + wgid }}
+wgkey {{ wg_privkey }}
+wgport {{ wg_port }}
 
-wgpeer {{ peer_pubkey }}{% if peer_psk is defined %} wgpsk {{ peer_psk }}{% endif %} wgendpoint {{ peer_ip }} {{ peer_port }}{% if peer_aip4 is defined %} wgaip {{ peer_aip4 }}{% endif %}{% if peer_aip6 is defined %} wgaip {{ peer_aip6 }}{% endif %} wgaip 172.20.0.0/14 wgaip fd00::/8
+wgpeer {{ peer_pubkey }}{% if peer_psk is defined %} wgpsk {{ peer_psk }}{% endif %} {% if peer_ip is defined }} wgendpoint {{ peer_endpoint_ip }} {{ peer_endpoint_port }}{% endif %}{% if peer_ip4 is defined %} wgaip {{ peer_ip4 }}/32{% endif %}{% if peer_ip6 is defined %} wgaip {{ peer_ip6 }}/128{% endif %} wgaip {{ dn42_ip4 }} wgaip {{ dn42_ip6 }}
 
-{% if peer_ll4 is defined %}
-!route -n -T {{ rdomain }} add -inet -iface {{ peer_ll4 }} {{ inet }}
+{% if peer_ip4 is defined %}
+!route -n -T {{ rdomain }} add -inet -iface {{ peer_ip4 }} {{ wg_ip4 }}
 {% endif %}
-{% if peer_ll6 is defined %}
-!route -n -T {{ rdomain }} add -inet6 {{ peer_ll6 }} {{ inet6 }}%wg{{ wgid }}
+{% if peer_ip6 is defined %}
+!route -n -T {{ rdomain }} add -inet6 {{ peer_ip6 }} {{ wg_ip6 }}%wg{{ wg_interface }}
 {% endif %}
-!route -n -T {{ rdomain }} sourceaddr -ifp lo{{ rdomain }}
+!route -n -T {{ rdomain }} sourceaddr -ifp lo{{ wg_rdomain }}
 """
 )
 

@@ -88,6 +88,8 @@ class PeerManager:
     def wg_create(self, info: dict) -> dict:
         try:
             peer_json = info["peer"]
+            wg_interface_id = info["interface_id"]
+            wg_rdomain = info["rdomain"]
             peer = PeerInfo.model_validate_json(peer_json)
             logger.debug("Creating peer: %s", peer)
             peer.dn42_validate()
@@ -96,7 +98,7 @@ class PeerManager:
             if not sp.returncode:
                 logger.error(f"Interface {wg_if} already exists")
                 return {"success": False, "error": "Interface already exists"}
-            wg_file = f"/etc/wireguard/wg{peer['wgid']}.conf"
+            wg_file = f"/etc/hostname.wg{peer['wgid']}"
             wg_data = hostname_wg.render(peer=peer)
             with open(wg_file, "w") as f:
                 f.write(wg_data)

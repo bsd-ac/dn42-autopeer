@@ -128,58 +128,69 @@ async def autopeer_create(
     """
     Create or update a peering session with the given ASN.
     """
-    # validate that peer information is valid
+    logger.debug(f"Peer info: {peer_info}")
 
-    peer_info.dn42_validate()
-
-    # generate new wgid
-    # we will use it for wireguard port and interface name
-    new_wgid = 1
-    max_wgid = session.query(models.PeerInfoDB).order_by(models.PeerInfoDB.wgid.desc()).first()
-    if max_wgid:
-        new_wgid = max_wgid.wgid + 1
-
-    # generate new wireguard privkey
-    wg_privkey = base64.b64encode(os.urandom(32))
-
-    # check if suggested linklocal IPs are already in use
-    # try:
-    #     if peer_info.suggest_ll_ip4:
-    #         our_ll = session.query(models.PeerInfoDB).filter(models.PeerInfoDB.our_ll_ip4 == peer_info.suggest_ll_ip4).first()
-    #         if our_ll:
-    #             raise RuntimeError
-    #         their_ll = session.query(models.PeerInfoDB).filter(models.PeerInfoDB.peer_ll_ip4 == peer_info.suggest_ll_ip4).first()
-    #         if their_ll:
-    #             raise RuntimeError
-    # except RuntimeError:
-    #     # generate new linklocal IP
-    #     peer_info.suggest_ll_ip4 = 
-
-
-    # convert peer_info to PeerInfoDB
-    peer_info_db = models.PeerInfoDB(
-        ASN=peer_info.ASN,
-        wgid=new_wgid,
-        wg_privkey=wg_privkey,
-        description=peer_info.description,
-        peer_ip=peer_info.peer_ip,
-        peer_port=peer_info.peer_port,
-        peer_pubkey=peer_info.peer_pubkey,
-        peer_psk=peer_info.peer_psk,
-        peer_ll_ip4=peer_info.peer_ll_ip4,
-        peer_ll_ip6=peer_info.peer_ll_ip6,
-        dn42_ip4=peer_info.dn42_ip4,
-        dn42_ip6=peer_info.dn42_ip6,
-        our_ll_ip4=peer_info.suggest_ll_ip4,
-        our_ll_ip6=peer_info.suggest_ll_ip6,
+    logger.debug(f"Checking if peer exists: {peer_info.ASN}")
+    peer_info_internal = (
+        session.query(models.PeerInfoDB)
+        .filter(models.PeerInfoDB.ASN == peer_info.ASN)
+        .first()
     )
+    if peer_info_internal:
+        logger.error(f"Peer exists: {peer_info_internal}")
+        return {"message": f"Peer with ASN {peer_info.ASN} already exists"}
 
-    # add or update peer info
-    session.merge(peer_info_db)
-    session.commit()
+    # # validate that peer information is valid
+    # peer_info.dn42_validate()
+
+    # # generate new wgid
+    # # we will use it for wireguard port and interface name
+    # new_wgid = 1
+    # max_wgid = session.query(models.PeerInfoDB).order_by(models.PeerInfoDB.wgid.desc()).first()
+    # if max_wgid:
+    #     new_wgid = max_wgid.wgid + 1
+
+    # # generate new wireguard privkey
+    # wg_privkey = base64.b64encode(os.urandom(32))
+
+    # # check if suggested linklocal IPs are already in use
+    # # try:
+    # #     if peer_info.suggest_ll_ip4:
+    # #         our_ll = session.query(models.PeerInfoDB).filter(models.PeerInfoDB.our_ll_ip4 == peer_info.suggest_ll_ip4).first()
+    # #         if our_ll:
+    # #             raise RuntimeError
+    # #         their_ll = session.query(models.PeerInfoDB).filter(models.PeerInfoDB.peer_ll_ip4 == peer_info.suggest_ll_ip4).first()
+    # #         if their_ll:
+    # #             raise RuntimeError
+    # # except RuntimeError:
+    # #     # generate new linklocal IP
+    # #     peer_info.suggest_ll_ip4 = 
 
 
-    # jinfo = {"command": "create", "peer_info": peer_info.model_dump()}
+    # # convert peer_info to PeerInfoDB
+    # peer_info_db = models.PeerInfoDB(
+    #     ASN=peer_info.ASN,
+    #     wgid=new_wgid,
+    #     wg_privkey=wg_privkey,
+    #     description=peer_info.description,
+    #     peer_ip=peer_info.peer_ip,
+    #     peer_port=peer_info.peer_port,
+    #     peer_pubkey=peer_info.peer_pubkey,
+    #     peer_psk=peer_info.peer_psk,
+    #     peer_ll_ip4=peer_info.peer_ll_ip4,
+    #     peer_ll_ip6=peer_info.peer_ll_ip6,
+    #     dn42_ip4=peer_info.dn42_ip4,
+    #     dn42_ip6=peer_info.dn42_ip6,
+    #     our_ll_ip4=peer_info.suggest_ll_ip4,
+    #     our_ll_ip6=peer_info.suggest_ll_ip6,
+    # )
+
+    # # add or update peer info
+    # session.merge(peer_info_db)
+    # session.commit()
+
+
+    jinfo = {"command": "create", "peer_info": peer_info.model_dump()}
     # pm_send(app.state.sock, jinfo)
     # resp = pm_recv(app.state.sock)
 
