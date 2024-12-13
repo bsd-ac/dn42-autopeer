@@ -159,7 +159,6 @@ async def autopeer_create(
         peer_info_db = models.PeerInfoDB(
             ASN=peer_info.ASN,
             wg_id=new_wgid,
-            wg_interface=settings.wg_base_interface + new_wgid,
             wg_privkey=new_wgkey,
             wg_port=settings.wg_base_port + new_wgid,
             description=peer_info.description,
@@ -193,6 +192,7 @@ async def autopeer_create(
         "description": peer_info_internal.description,
         "wg_id": peer_info_internal.wg_id,
         "wg_rdomain": settings.wg_rdomain,
+        "wg_interface": settings.wg_base_interface + peer_info_internal.wg_id,
         "wg_mtu": settings.wg_mtu,
         "wg_privkey": peer_info_internal.wg_privkey,
         "wg_port": peer_info_internal.wg_port,
