@@ -89,7 +89,7 @@ class PeerManager:
             peer = info["peer_info"]
             logger.debug("Creating peer: %s", peer)
             wg_interface = f"wg{peer['wg_interface']}"
-            if self.wg_exists(info):
+            if self.wg_exists(info)["success"]:
                 logger.error(f"Interface {wg_interface} already exists")
                 return {"success": False, "error": "Interface already exists"}
             wg_file = f"/etc/hostname.{wg_interface}"
