@@ -38,11 +38,11 @@ class Peer:
     def new_wgid(session: Session) -> int:
         max_wgid = (
             session.query(models.PeerInfoDB)
-            .order_by(models.PeerInfoDB.wgid.desc())
+            .order_by(models.PeerInfoDB.wg_id.desc())
             .first()
         )
         if max_wgid:
-            return max_wgid.wgid + 1
+            return max_wgid.wg_id + 1
         return 1
 
 
