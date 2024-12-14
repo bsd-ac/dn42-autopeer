@@ -254,7 +254,7 @@ async def autopeer_delete(
 
     jinfo = {"command": "wg_delete", "peer_info": wg_delete_info}
     pm_send(app.state.sock, jinfo)
-    resp = pm_recv()
+    resp = pm_recv(app.state.sock)
 
     success = resp.get("success", False)
     if not success:
