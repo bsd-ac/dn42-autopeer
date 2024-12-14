@@ -37,14 +37,14 @@ P{{ loop.index }}_remote4="{{ peer.peer_ll_ip4 }}"
 {% elif peer.dn42_ip4 is defined %}
 P{{ loop.index }}_remote4="{{ peer.dn42_ip4 }}"
 {% endif -%}
-{% if peer.use_ll_ip6 and peer.peer_ll_ip6 is defined %}
+{%- if peer.use_ll_ip6 and peer.peer_ll_ip6 is defined %}
 P{{ loop.index }}_remote6="{{ peer.peer_ll_ip6 }}"
 {% elif peer.dn42_ip6 is defined %}
 P{{ loop.index }}_remote6="{{ peer.dn42_ip6 }}"
 {% endif -%}
 P{{ loop.index }}_asn="{{ peer.ASN }}"
 
-{% endfor %}
+{% endfor -%}
 """,
 )
 
