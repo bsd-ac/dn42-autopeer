@@ -61,7 +61,7 @@ group "dn42_peers" {
                 descr $P{{ loop.index }}_descr4
                 set nexthop $P{{ loop.index }}_remote4
 {% if peer.use_ll_ip4 %}
-                local-address {{ peer.peer_ll_ip4 }}
+                local-address {{ peer.our_ll_ip4 }}
 {% else %}
                 local-address {{ router_ip4 }}
 {% endif %}
@@ -73,7 +73,7 @@ group "dn42_peers" {
                 descr $P{{ loop.index }}_descr6
                 set nexthop $P{{ loop.index }}_remote6
 {% if peer.use_ll_ip6 %}
-                local-address {{ peer.peer_ll_ip6 }}%wg{{ peer.wg_interface }}
+                local-address {{ peer.our_ll_ip6 }}%wg{{ peer.wg_interface }}
 {% else %}
                 local-address {{ router_ip6 }}
 {% endif %}
