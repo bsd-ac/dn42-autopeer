@@ -255,11 +255,17 @@ async def autopeer_delete(
     jinfo = {"command": "wg_delete", "peer_info": wg_delete_info}
     pm_send(app.state.sock, jinfo)
     resp = pm_recv(app.state.sock)
-
     success = resp.get("success", False)
     if not success:
         raise HTTPException(
             status_code=500,
             detail=f'Error deleting peer: {resp.get("message", "unknown error")}',
         )
+    logger.info(f"ASN {peer_info_internal.ASN} wireguard deleted")
+
+    # TODO: regenerate BGP configuration
+
+    session.delete(peer_info_internal)
+    session.commit()
+
     return {"success": True, "message": f"ASN {peer_info_internal.ASN} deleted"}
