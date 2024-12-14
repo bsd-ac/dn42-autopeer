@@ -146,7 +146,7 @@ async def autopeer_create(
     logger.debug(f"Checking if peer exists: {peer_info.ASN}")
     try:
         peer_info_internal = Peer.get(session, peer_info.ASN)
-        # return {"message": f"Peer with ASN {peer_info_internal.ASN} already exists"}
+        return {"message": f"Peer with ASN {peer_info_internal.ASN} already exists"}
     except KeyError:
         # validate that peer information is valid
         peer_info.dn42_validate()
@@ -214,16 +214,16 @@ async def autopeer_create(
 
     logger.debug(f"Creating peer: {wg_create_info}")
 
-    # jinfo = {"command": "wg_create", "peer_info": wg_create_info}
-    # pm_send(app.state.sock, jinfo)
-    # resp = pm_recv(app.state.sock)
+    jinfo = {"command": "wg_create", "peer_info": wg_create_info}
+    pm_send(app.state.sock, jinfo)
+    resp = pm_recv(app.state.sock)
 
-    # logger.debug(f"Received response: {resp}")
-    # if not resp.get("success", False):
-    #     raise HTTPException(
-    #         status_code=500,
-    #         detail=f'Error creating wireguard interface: {resp.get("error", "unknown error")}',
-    #     )
+    logger.debug(f"Received response: {resp}")
+    if not resp.get("success", False):
+        raise HTTPException(
+            status_code=500,
+            detail=f'Error creating wireguard interface: {resp.get("error", "unknown error")}',
+        )
     
     all_peers = session.query(models.PeerInfoDB).all()
     bgp_info = []
