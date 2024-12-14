@@ -138,7 +138,7 @@ async def autopeer_get(peer_info: schemas.PeerInfo, session: Session = Depends(g
         "LINKLOCAL_IP4": peer_info_internal.our_ll_ip4,
         "LINKLOCAL_IP6": peer_info_internal.our_ll_ip6,
     }
-    return {"peer_info": json.dumps(peer_info_sanitized)}
+    return {"peer_info": peer_info_sanitized}
 
 
 @app.post("/create")
