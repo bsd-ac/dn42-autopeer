@@ -164,6 +164,7 @@ class PeerManager:
 
             logger.debug("Rendering BGP macros file")
             bgpd_macros_data = bgpd_macros.render(peers=peers)
+            logger.debug(f"bgpd_macros_data: {bgpd_macros_data}")
             with open(bgpd_macros_file_tmp, "w") as f:
                 f.write(bgpd_macros_data)
             logger.debug("Swapping BGP macros files")
@@ -171,6 +172,7 @@ class PeerManager:
 
             logger.debug("Rendering BGP group file")
             bgpd_group_data = bgpd_group.render(peers=peers)
+            logger.debug(f"bgpd_group_data: {bgpd_group_data}")
             with open(bgpd_group_file_tmp, "w") as f:
                 f.write(bgpd_group_data)
             logger.debug("Swapping BGP group files")
@@ -199,8 +201,10 @@ class PeerManager:
             success = False
             error = str(e)
         finally:
-            os.unlink(bgpd_macros_file_tmp)
-            os.unlink(bgpd_group_file_tmp)
+            if os.path.isfile(bgpd_macros_file_tmp):
+                os.unlink(bgpd_macros_file_tmp)
+            if os.path.isfile(bgpd_group_file_tmp):
+                os.unlink(bgpd_group_file_tmp)
         
         return {"success": success, "error": error}
 
