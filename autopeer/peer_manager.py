@@ -2,6 +2,7 @@ import base64
 import ipaddress
 import json
 import os
+from pathlib import Path
 import socket
 import subprocess
 from typing import Generator, Optional
@@ -155,6 +156,9 @@ class PeerManager:
 
             if not os.path.isdir("/etc/bgpd.d"):
                 os.mkdir("/etc/bgpd.d")
+
+            for f in [bgpd_macros, bgpd_group]:
+                Path(f).touch()
 
             bgpd_macros_data = bgpd_macros.render(peers=peers)
             with open(bgpd_macros_tmp, "w") as f:
