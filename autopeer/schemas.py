@@ -47,7 +47,7 @@ class PeerInfo(BaseModel):
     extended_next_hop: bool = False
 
 
-    # @model_validator(mode="after")
+    @model_validator(mode="after")
     def dn42_validate(self):
         if not self.description:
             self.description = f"Peer_{self.ASN}"
@@ -115,3 +115,4 @@ class PeerInfo(BaseModel):
                 raise HTTPException(
                     status_code=400, detail=f"Pre-shared key is not a valid base64: {e}"
                 )
+        return self
