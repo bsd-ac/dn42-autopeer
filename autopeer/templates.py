@@ -32,7 +32,7 @@ bgpd_macros = Template(
 {% for peer in peers %}
 P{{ loop.index }}_descr4="{{ peer.description }}_P4"
 P{{ loop.index }}_descr6="{{ peer.description }}_P6"
-{% if peer.use_ll_ip4 and peer.peer_ll_ip4 is defined %}
+{%- if peer.use_ll_ip4 and peer.peer_ll_ip4 is defined %}
 P{{ loop.index }}_remote4="{{ peer.peer_ll_ip4 }}"
 {% elif peer.dn42_ip4 is defined %}
 P{{ loop.index }}_remote4="{{ peer.dn42_ip4 }}"
