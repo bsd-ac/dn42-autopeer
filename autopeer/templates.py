@@ -34,12 +34,12 @@ P{{ loop.index }}_descr4="{{ peer.description }}_P4"
 P{{ loop.index }}_descr6="{{ peer.description }}_P6"
 {%- if peer.use_ll_ip4 and peer.peer_ll_ip4 is defined %}
 P{{ loop.index }}_remote4="{{ peer.peer_ll_ip4 }}"
-{% elif peer.dn42_ip4 is defined %}
+{%- elif peer.dn42_ip4 is defined -%}
 P{{ loop.index }}_remote4="{{ peer.dn42_ip4 }}"
 {% endif -%}
 {%- if peer.use_ll_ip6 and peer.peer_ll_ip6 is defined %}
 P{{ loop.index }}_remote6="{{ peer.peer_ll_ip6 }}"
-{% elif peer.dn42_ip6 is defined %}
+{%- elif peer.dn42_ip6 is defined -%}
 P{{ loop.index }}_remote6="{{ peer.dn42_ip6 }}"
 {% endif -%}
 P{{ loop.index }}_asn="{{ peer.ASN }}"
@@ -54,7 +54,7 @@ bgpd_group = Template(
 group "dn42_peers" {
         announce IPv4 unicast
         announce IPv6 unicast
-{% for peer in peers %}
+{%- for peer in peers %}
 {% if peer.peer_ll_ip4 is defined or peer.dn42_ip4 is defined %}
         neighbor $P{{ loop.index }}_remote4 {
                 remote-as $P{{ loop.index }}_asn
@@ -62,7 +62,7 @@ group "dn42_peers" {
                 set nexthop $P{{ loop.index }}_remote4
         }
 {% endif -%}
-{% if peer.peer_ll_ip6 is defined or peer.dn42_ip6 is defined %}
+{%- if peer.peer_ll_ip6 is defined or peer.dn42_ip6 is defined %}
         neighbor $P{{ loop.index }}_remote6 {
                 remote-as $P{{ loop.index }}_asn
                 descr $P{{ loop.index }}_descr6
