@@ -99,9 +99,7 @@ def get_db():
 
 
 @app.post("/login")
-async def autopeer_login(
-    peer_info: schemas.PeerInfo
-):
+async def autopeer_login(peer_info: schemas.PeerInfo):
     """
     Login to the autopeering service.
     Creates a new session token that is valid for one minute.
@@ -164,12 +162,16 @@ async def autopeer_create(
         if not peer_info.suggest_ll_ip4:
             peer_info.suggest_ll_ip4 = random_ip4(LL_SUBNET4)
         for i in range(MAX_IP_TRIES):
-            used_by_us = session.query(models.PeerInfoDB).filter(
-                models.PeerInfoDB.our_ll_ip4 == peer_info.suggest_ll_ip4
-            ).one_or_none()
-            used_by_others = session.query(models.PeerInfoDB).filter(
-                models.PeerInfoDB.peer_ll_ip4 == peer_info.suggest_ll_ip4
-            ).one_or_none()
+            used_by_us = (
+                session.query(models.PeerInfoDB)
+                .filter(models.PeerInfoDB.our_ll_ip4 == peer_info.suggest_ll_ip4)
+                .one_or_none()
+            )
+            used_by_others = (
+                session.query(models.PeerInfoDB)
+                .filter(models.PeerInfoDB.peer_ll_ip4 == peer_info.suggest_ll_ip4)
+                .one_or_none()
+            )
             if used_by_us or used_by_others:
                 logger.error(
                     f"Link local IPv4 address {peer_info.suggest_ll_ip4} already in use"
@@ -181,17 +183,21 @@ async def autopeer_create(
         else:
             raise HTTPException(
                 status_code=500,
-                detail="Could not generate unique link local IPv4 address"
+                detail="Could not generate unique link local IPv4 address",
             )
         if not peer_info.suggest_ll_ip6:
             peer_info.suggest_ll_ip6 = random_ip6(LL_SUBNET6)
         for i in range(MAX_IP_TRIES):
-            used_by_us = session.query(models.PeerInfoDB).filter(
-                models.PeerInfoDB.our_ll_ip6 == peer_info.suggest_ll_ip6
-            ).one_or_none()
-            used_by_others = session.query(models.PeerInfoDB).filter(
-                models.PeerInfoDB.peer_ll_ip6 == peer_info.suggest_ll_ip6
-            ).one_or_none()
+            used_by_us = (
+                session.query(models.PeerInfoDB)
+                .filter(models.PeerInfoDB.our_ll_ip6 == peer_info.suggest_ll_ip6)
+                .one_or_none()
+            )
+            used_by_others = (
+                session.query(models.PeerInfoDB)
+                .filter(models.PeerInfoDB.peer_ll_ip6 == peer_info.suggest_ll_ip6)
+                .one_or_none()
+            )
             if used_by_us or used_by_others:
                 logger.error(
                     f"Link local IPv6 address {peer_info.suggest_ll_ip6} already in use"
@@ -203,7 +209,7 @@ async def autopeer_create(
         else:
             raise HTTPException(
                 status_code=500,
-                detail="Could not generate unique link local IPv6 address"
+                detail="Could not generate unique link local IPv6 address",
             )
 
         # convert peer_info to PeerInfoDB

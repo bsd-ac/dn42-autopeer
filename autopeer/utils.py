@@ -18,21 +18,23 @@ def mvswap_files(src: str, dst: str) -> None:
     logger.debug("mvswap_files: %s -> %s", tmp2, src)
     os.rename(tmp2, src)
 
+
 def random_ip4(network: ipaddress.IPv4Network) -> str:
-   first_ip = int(network.network_address)
-   last_ip = int(network.broadcast_address)
-   if network.prefixlen == 32:
+    first_ip = int(network.network_address)
+    last_ip = int(network.broadcast_address)
+    if network.prefixlen == 32:
         return str(network.network_address)
-   random_ip = random.randint(first_ip, last_ip)
-   return str(ipaddress.IPv4Address(random_ip))
+    random_ip = random.randint(first_ip, last_ip)
+    return str(ipaddress.IPv4Address(random_ip))
+
 
 def random_ip6(network: ipaddress.IPv6Network) -> str:
-   first_ip = int(network.network_address)
-   last_ip = int(network.broadcast_address)
-   if network.prefixlen == 128:
+    first_ip = int(network.network_address)
+    last_ip = int(network.broadcast_address)
+    if network.prefixlen == 128:
         return str(network.network_address)
-   random_ip = random.randint(first_ip, last_ip)
-   return str(ipaddress.IPv6Address(random_ip))
+    random_ip = random.randint(first_ip, last_ip)
+    return str(ipaddress.IPv6Address(random_ip))
 
 
 class Wireguard:
