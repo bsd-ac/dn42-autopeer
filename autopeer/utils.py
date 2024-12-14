@@ -9,8 +9,11 @@ from autopeer.logger import logger
 
 def mvswap_files(src: str, dst: str) -> None:
     tmp2 = f"{dst}.tmp2"
+    logger.debug("mvswap_files: %s -> %s", dst, tmp2)
     os.rename(dst, tmp2)
+    logger.debug("mvswap_files: %s -> %s", src, dst)
     os.rename(src, dst)
+    logger.debug("mvswap_files: %s -> %s", tmp2, src)
     os.rename(tmp2, src)
 
 class Wireguard:

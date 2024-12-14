@@ -154,20 +154,26 @@ class PeerManager:
             bgpd_group = "/etc/bgpd.d/dn42-group.conf"
             bgpd_group_tmp = "/etc/bgpd.d/dn42-group.conf.tmp"
 
+            logger.debug("Creating BGP config files")
             if not os.path.isdir("/etc/bgpd.d"):
                 os.mkdir("/etc/bgpd.d")
 
+            logger.debug("Ensuring original files exist")
             for f in [bgpd_macros, bgpd_group]:
                 Path(f).touch()
 
+            logger.debug("Rendering BGP macros file")
             bgpd_macros_data = bgpd_macros.render(peers=peers)
             with open(bgpd_macros_tmp, "w") as f:
                 f.write(bgpd_macros_data)
+            logger.debug("Swapping BGP macros files")
             mvswap_files(bgpd_macros, bgpd_macros_tmp)
 
+            logger.debug("Rendering BGP group file")
             bgpd_group_data = bgpd_group.render(peers=peers)
             with open(bgpd_group_tmp, "w") as f:
                 f.write(bgpd_group_data)
+            logger.debug("Swapping BGP group files")
             mvswap_files(bgpd_group, bgpd_group_tmp)
 
             # test the config
