@@ -99,13 +99,13 @@ def get_db():
 
 
 @app.post("/login")
-async def autopeer_login(peer_info: schemas.PeerInfo):
+async def autopeer_login(peer: schemas.PeerASN):
     """
     Login to the autopeering service.
     Creates a new session token that is valid for one minute.
     """
     token = uuid.uuid4()
-    cache[peer_info.ASN] = f"{token}"
+    cache[peer.ASN] = f"{token}"
     return {"token": f"{token}"}
 
 
