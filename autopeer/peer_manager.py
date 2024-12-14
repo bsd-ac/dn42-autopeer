@@ -114,7 +114,7 @@ class PeerManager:
 
     def wg_delete(self, info: dict) -> dict:
         try:
-            peer = info["peer"]
+            peer = info["peer_info"]
             logger.debug("Deleting peer: %s", peer)
             wg_interface = f"wg{peer['wg_interface']}"
             wg_file = f"/etc/hostname.{wg_interface}"
