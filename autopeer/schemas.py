@@ -47,7 +47,7 @@ class PeerInfo(BaseModel):
     extended_next_hop: bool = False
 
 
-    @model_validator(pre=True)
+    @model_validator
     def dn42_validate(self):
         if not self.description:
             self.description = f"Peer_{self.ASN}"
