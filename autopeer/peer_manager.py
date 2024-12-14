@@ -11,7 +11,8 @@ from fastapi import HTTPException
 from autopeer import max_bytes
 from autopeer.logger import logger
 from autopeer.schemas import PeerInfo
-from autopeer.templates import hostname_wg
+from autopeer.templates import bgpd_group, bgpd_macros, hostname_wg
+from autopeer.utils import mvswap_files
 
 
 class PeerManager:
@@ -141,36 +142,55 @@ class PeerManager:
         return {"success": True}
 
     def bgp_update(self, info: dict) -> dict:
+        success = True
+        error = None
         try:
-            peers_json = info["peers"]
-            peers = [PeerInfo.model_validate_json(peer) for peer in peers_json]
-            for peer in peers:
-                peer.dn42_validate()
-            bgpd_file = "/etc/bgpd.conf"
-            bgpd_tmp_file = "/tmp/bgpd.conf"
-            bgpd_data = ""  # bgpd_conf.render(peers=peers)
-            # write to temp file first
-            with open(bgpd_tmp_file, "w") as f:
-                f.write(bgpd_data)
+            peers = info["peers"] # multiple peers
+            logger.debug("Updating BGP: %s", peers)
+
+            bgpd_macros = "/etc/bgpd.d/dn42-macros.conf"
+            bgpd_macros_tmp = "/etc/bgpd.d/dn42-macros.conf.tmp"
+            bgpd_group = "/etc/bgpd.d/dn42-group.conf"
+            bgpd_group_tmp = "/etc/bgpd.d/dn42-group.conf.tmp"
+
+            if not os.path.isdir("/etc/bgpd.d"):
+                os.mkdir("/etc/bgpd.d")
+
+            bgpd_macros_data = bgpd_macros.render(peers=peers)
+            with open(bgpd_macros_tmp, "w") as f:
+                f.write(bgpd_macros_data)
+            mvswap_files(bgpd_macros, bgpd_macros_tmp)
+
+            bgpd_group_data = bgpd_group.render(peers=peers)
+            with open(bgpd_group_tmp, "w") as f:
+                f.write(bgpd_group_data)
+            mvswap_files(bgpd_group, bgpd_group_tmp)
+
             # test the config
             sp = subprocess.run(
-                ["/usr/sbin/bgpd", "-f", "-n", f"{bgpd_tmp_file}"], capture_output=True
+                ["/usr/sbin/rcctl", "configtest", "bgpd"], capture_output=True
             )
             if sp.returncode:
                 logger.error(f"Failed to test bgpd config: {sp.stderr.decode()}")
-                os.unlink(bgpd_tmp_file)
-                return {"success": False, "error": "Failed to test bgpd config"}
-            # move the temp file to the real file
-            os.rename(bgpd_tmp_file, bgpd_file)
+                mvswap_files(bgpd_macros_tmp, bgpd_macros)
+                mvswap_files(bgpd_group_tmp, bgpd_group)
+                raise RuntimeError("Failed to test bgpd config")
             # reload bgpd
             sp = subprocess.run(
                 ["/usr/sbin/rcctl", "reload", "bgpd"], capture_output=True
             )
             if sp.returncode:
                 logger.error(f"Failed to reload bgpd: {sp.stderr.decode()}")
-                return {"success": False, "error": "Failed to reload bgpd"}
+                raise RuntimeError("Failed to reload bgpd")
         except HTTPException as e:
-            return {"success": False, "error": e.detail}
+            success = False
+            error = e.detail
         except Exception as e:
-            return {"success": False, "error": str(e)}
-        return {"success": True}
+            success = False
+            error = str(e)
+        finally:
+            os.unlink(bgpd_macros_tmp)
+            os.unlink(bgpd_group_tmp)
+        
+        return {"success": success, "error": error}
+

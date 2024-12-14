@@ -224,8 +224,38 @@ async def autopeer_create(
             status_code=500,
             detail=f'Error creating wireguard interface: {resp.get("error", "unknown error")}',
         )
-    else:
-        return {"message": f"Autopeering with ASN {peer_info_internal.ASN}"}
+    
+    all_peers = session.query(models.PeerInfoDB).all()
+    bgp_info = []
+    for peer_info_internal in all_peers:
+        tmp_info = {
+                "ASN": peer_info_internal.ASN,
+                "description": peer_info_internal.description,
+                "wg_id": peer_info_internal.wg_id,
+                "wg_interface": settings.wg_base_interface + peer_info_internal.wg_id,
+                "peer_ll_ip4": peer_info_internal.peer_ll_ip4,
+                "peer_ll_ip6": peer_info_internal.peer_ll_ip6,
+                "our_ll_ip4": peer_info_internal.our_ll_ip4,
+                "our_ll_ip6": peer_info_internal.our_ll_ip6,
+                "dn42_ip4": peer_info_internal.dn42_ip4,
+                "dn42_ip6": peer_info_internal.dn42_ip6,
+                "use_ll_ip4": peer_info_internal.use_ll_ip4,
+                "use_ll_ip6": peer_info_internal.use_ll_ip6,
+            }
+        tmp_info = {k: v for k, v in tmp_info.items() if v is not None}
+        bgp_info.append(tmp_info)
+
+    jinfo = {"command": "bgp_update", "peers": bgp_info}
+    pm_send(app.state.sock, jinfo)
+    resp = pm_recv(app.state.sock)
+
+    logger.debug(f"Received response: {resp}")
+    if not resp.get("success", False):
+        raise HTTPException(
+            status_code=500,
+            detail=f'Error updating BGP configuration: {resp.get("error", "unknown error")}',
+        )
+    return {"success": True, "message": f"ASN {peer_info_internal.ASN} created"}
 
 
 @app.delete("/delete")

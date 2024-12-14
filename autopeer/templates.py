@@ -26,7 +26,7 @@ wgpeer {{ peer_pubkey }}{% if peer_psk is defined %} wgpsk {{ peer_psk }}{% endi
 """,
 )
 
-bgpd_peer_macros = Template(
+bgpd_macros = Template(
     undefined=StrictUndefined,
     source="""\
 {% for peer in peers %}
@@ -43,7 +43,7 @@ P{{ loop.index }}_asn="{{ peer.asn }}"
 """,
 )
 
-bgpd_peer_group = Template(
+bgpd_group = Template(
     undefined=StrictUndefined,
     source="""\
 group "dn42_peers" {

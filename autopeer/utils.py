@@ -7,6 +7,12 @@ from autopeer import models, settings
 from autopeer.logger import logger
 
 
+def mvswap_files(src: str, dst: str) -> None:
+    tmp2 = f"{dst}.tmp2"
+    os.rename(dst, tmp2)
+    os.rename(src, dst)
+    os.rename(tmp2, src)
+
 class Wireguard:
     @staticmethod
     def generate_privkey() -> str:
