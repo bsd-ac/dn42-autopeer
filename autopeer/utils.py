@@ -16,6 +16,7 @@ def mvswap_files(src: str, dst: str) -> None:
     logger.debug("mvswap_files: %s -> %s", tmp2, src)
     os.rename(tmp2, src)
 
+
 class Wireguard:
     @staticmethod
     def generate_privkey() -> str:

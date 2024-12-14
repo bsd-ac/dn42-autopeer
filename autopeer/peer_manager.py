@@ -80,7 +80,9 @@ class PeerManager:
         try:
             peer = info["peer_info"]
             wg_interface = f"wg{peer['wg_interface']}"
-            sp = subprocess.run(["/sbin/ifconfig", f"{wg_interface}"], capture_output=True)
+            sp = subprocess.run(
+                ["/sbin/ifconfig", f"{wg_interface}"], capture_output=True
+            )
             return {"success": not sp.returncode}
         except Exception as e:
             logger.error(f"Failed to check if interface exists: {e}")
@@ -127,7 +129,8 @@ class PeerManager:
                 logger.warning(f"Wireguard hostname file {wg_file} does not exist")
             if self.wg_exists(info)["success"]:
                 sp = subprocess.run(
-                    ["/sbin/ifconfig", f"{wg_interface}", "destroy"], capture_output=True
+                    ["/sbin/ifconfig", f"{wg_interface}", "destroy"],
+                    capture_output=True,
                 )
                 if sp.returncode:
                     logger.debug(
@@ -146,7 +149,7 @@ class PeerManager:
         success = True
         error = None
         try:
-            peers = info["peers"] # multiple peers
+            peers = info["peers"]  # multiple peers
             router_ip4 = info["router_ip4"]
             router_ip6 = info["router_ip6"]
             logger.debug("Updating BGP: %s", peers)
@@ -167,7 +170,9 @@ class PeerManager:
                 Path(f).touch()
 
             logger.debug("Rendering BGP macros file")
-            bgpd_macros_data = bgpd_macros.render(peers=peers, router_ip4=router_ip4, router_ip6=router_ip6)
+            bgpd_macros_data = bgpd_macros.render(
+                peers=peers, router_ip4=router_ip4, router_ip6=router_ip6
+            )
             logger.debug(f"bgpd_macros_data: {bgpd_macros_data}")
             with open(bgpd_macros_file_tmp, "w") as f:
                 f.write(bgpd_macros_data)
@@ -175,7 +180,9 @@ class PeerManager:
             mvswap_files(bgpd_macros_file, bgpd_macros_file_tmp)
 
             logger.debug("Rendering BGP group file")
-            bgpd_group_data = bgpd_group.render(peers=peers, router_ip4=router_ip4, router_ip6=router_ip6)
+            bgpd_group_data = bgpd_group.render(
+                peers=peers, router_ip4=router_ip4, router_ip6=router_ip6
+            )
             logger.debug(f"bgpd_group_data: {bgpd_group_data}")
             with open(bgpd_group_file_tmp, "w") as f:
                 f.write(bgpd_group_data)
@@ -183,7 +190,9 @@ class PeerManager:
             mvswap_files(bgpd_group_file, bgpd_group_file_tmp)
 
             logger.debug("Rendering BGP listener file")
-            bgpd_listener_data = bgpd_listener.render(peers=peers, router_ip4=router_ip4, router_ip6=router_ip6)
+            bgpd_listener_data = bgpd_listener.render(
+                peers=peers, router_ip4=router_ip4, router_ip6=router_ip6
+            )
             logger.debug(f"bgpd_listener_data: {bgpd_listener_data}")
             with open(bgpd_listener_file_tmp, "w") as f:
                 f.write(bgpd_listener_data)
@@ -220,6 +229,5 @@ class PeerManager:
                 os.unlink(bgpd_group_file_tmp)
             if os.path.isfile(bgpd_listener_file_tmp):
                 os.unlink(bgpd_listener_file_tmp)
-        
-        return {"success": success, "error": error}
 
+        return {"success": success, "error": error}

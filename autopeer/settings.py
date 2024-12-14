@@ -99,7 +99,7 @@ class Settings:
         if not self._initialized:
             raise ValueError("Settings not initialized")
         return self._router_ip4
-    
+
     @property
     def router_ip6(self):
         if not self._initialized:

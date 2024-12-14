@@ -201,8 +201,16 @@ async def autopeer_create(
         "peer_port": peer_info_internal.peer_port,
         "peer_pubkey": peer_info_internal.peer_pubkey,
         "peer_psk": peer_info_internal.peer_psk,
-        "peer_ll_ip4": peer_info_internal.peer_ll_ip4 if peer_info_internal.use_ll_ip4 else peer_info_internal.dn42_ip4,
-        "peer_ll_ip6": peer_info_internal.peer_ll_ip6 if peer_info_internal.use_ll_ip6 else peer_info_internal.dn42_ip6,
+        "peer_ll_ip4": (
+            peer_info_internal.peer_ll_ip4
+            if peer_info_internal.use_ll_ip4
+            else peer_info_internal.dn42_ip4
+        ),
+        "peer_ll_ip6": (
+            peer_info_internal.peer_ll_ip6
+            if peer_info_internal.use_ll_ip6
+            else peer_info_internal.dn42_ip6
+        ),
         "our_ll_ip4": peer_info_internal.our_ll_ip4,
         "our_ll_ip6": peer_info_internal.our_ll_ip6,
         "dn42_netspace4": f"{DN42_SUBNET4}",
@@ -224,28 +232,33 @@ async def autopeer_create(
             status_code=500,
             detail=f'Error creating wireguard interface: {resp.get("error", "unknown error")}',
         )
-    
+
     all_peers = session.query(models.PeerInfoDB).all()
     bgp_info = []
     for peer_info_internal in all_peers:
         tmp_info = {
-                "ASN": peer_info_internal.ASN,
-                "description": peer_info_internal.description,
-                "wg_id": peer_info_internal.wg_id,
-                "wg_interface": settings.wg_base_interface + peer_info_internal.wg_id,
-                "peer_ll_ip4": peer_info_internal.peer_ll_ip4,
-                "peer_ll_ip6": peer_info_internal.peer_ll_ip6,
-                "our_ll_ip4": peer_info_internal.our_ll_ip4,
-                "our_ll_ip6": peer_info_internal.our_ll_ip6,
-                "dn42_ip4": peer_info_internal.dn42_ip4,
-                "dn42_ip6": peer_info_internal.dn42_ip6,
-                "use_ll_ip4": peer_info_internal.use_ll_ip4,
-                "use_ll_ip6": peer_info_internal.use_ll_ip6,
-            }
+            "ASN": peer_info_internal.ASN,
+            "description": peer_info_internal.description,
+            "wg_id": peer_info_internal.wg_id,
+            "wg_interface": settings.wg_base_interface + peer_info_internal.wg_id,
+            "peer_ll_ip4": peer_info_internal.peer_ll_ip4,
+            "peer_ll_ip6": peer_info_internal.peer_ll_ip6,
+            "our_ll_ip4": peer_info_internal.our_ll_ip4,
+            "our_ll_ip6": peer_info_internal.our_ll_ip6,
+            "dn42_ip4": peer_info_internal.dn42_ip4,
+            "dn42_ip6": peer_info_internal.dn42_ip6,
+            "use_ll_ip4": peer_info_internal.use_ll_ip4,
+            "use_ll_ip6": peer_info_internal.use_ll_ip6,
+        }
         tmp_info = {k: v for k, v in tmp_info.items() if v is not None}
         bgp_info.append(tmp_info)
 
-    jinfo = {"command": "bgp_update", "peers": bgp_info, "router_ip4": settings.router_ip4, "router_ip6": settings.router_ip6}
+    jinfo = {
+        "command": "bgp_update",
+        "peers": bgp_info,
+        "router_ip4": settings.router_ip4,
+        "router_ip6": settings.router_ip6,
+    }
     pm_send(app.state.sock, jinfo)
     resp = pm_recv(app.state.sock)
 
@@ -302,23 +315,28 @@ async def autopeer_delete(
     bgp_info = []
     for peer_info_internal in all_peers:
         tmp_info = {
-                "ASN": peer_info_internal.ASN,
-                "description": peer_info_internal.description,
-                "wg_id": peer_info_internal.wg_id,
-                "wg_interface": settings.wg_base_interface + peer_info_internal.wg_id,
-                "peer_ll_ip4": peer_info_internal.peer_ll_ip4,
-                "peer_ll_ip6": peer_info_internal.peer_ll_ip6,
-                "our_ll_ip4": peer_info_internal.our_ll_ip4,
-                "our_ll_ip6": peer_info_internal.our_ll_ip6,
-                "dn42_ip4": peer_info_internal.dn42_ip4,
-                "dn42_ip6": peer_info_internal.dn42_ip6,
-                "use_ll_ip4": peer_info_internal.use_ll_ip4,
-                "use_ll_ip6": peer_info_internal.use_ll_ip6,
-            }
+            "ASN": peer_info_internal.ASN,
+            "description": peer_info_internal.description,
+            "wg_id": peer_info_internal.wg_id,
+            "wg_interface": settings.wg_base_interface + peer_info_internal.wg_id,
+            "peer_ll_ip4": peer_info_internal.peer_ll_ip4,
+            "peer_ll_ip6": peer_info_internal.peer_ll_ip6,
+            "our_ll_ip4": peer_info_internal.our_ll_ip4,
+            "our_ll_ip6": peer_info_internal.our_ll_ip6,
+            "dn42_ip4": peer_info_internal.dn42_ip4,
+            "dn42_ip6": peer_info_internal.dn42_ip6,
+            "use_ll_ip4": peer_info_internal.use_ll_ip4,
+            "use_ll_ip6": peer_info_internal.use_ll_ip6,
+        }
         tmp_info = {k: v for k, v in tmp_info.items() if v is not None}
         bgp_info.append(tmp_info)
 
-    jinfo = {"command": "bgp_update", "peers": bgp_info, "router_ip4": settings.router_ip4, "router_ip6": settings.router_ip6}
+    jinfo = {
+        "command": "bgp_update",
+        "peers": bgp_info,
+        "router_ip4": settings.router_ip4,
+        "router_ip6": settings.router_ip6,
+    }
     pm_send(app.state.sock, jinfo)
     resp = pm_recv(app.state.sock)
 
