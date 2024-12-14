@@ -247,7 +247,7 @@ async def autopeer_delete(
     del peer_info
 
     wg_delete_info = {
-        "ASN": peer_info.ASN,
+        "ASN": peer_info_internal.ASN,
         "wg_id": peer_info_internal.wg_id,
         "wg_interface": settings.wg_base_interface + peer_info_internal.wg_id,
     }
@@ -262,4 +262,4 @@ async def autopeer_delete(
             status_code=500,
             detail=f'Error deleting peer: {resp.get("message", "unknown error")}',
         )
-    return {"success": True, "message": f"ASN {peer_info.ASN} deleted"}
+    return {"success": True, "message": f"ASN {peer_info_internal.ASN} deleted"}
