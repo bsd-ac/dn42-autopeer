@@ -214,16 +214,16 @@ async def autopeer_create(
 
     logger.debug(f"Creating peer: {wg_create_info}")
 
-    jinfo = {"command": "wg_create", "peer_info": wg_create_info}
-    pm_send(app.state.sock, jinfo)
-    resp = pm_recv(app.state.sock)
+    # jinfo = {"command": "wg_create", "peer_info": wg_create_info}
+    # pm_send(app.state.sock, jinfo)
+    # resp = pm_recv(app.state.sock)
 
-    logger.debug(f"Received response: {resp}")
-    if not resp.get("success", False):
-        raise HTTPException(
-            status_code=500,
-            detail=f'Error creating wireguard interface: {resp.get("error", "unknown error")}',
-        )
+    # logger.debug(f"Received response: {resp}")
+    # if not resp.get("success", False):
+    #     raise HTTPException(
+    #         status_code=500,
+    #         detail=f'Error creating wireguard interface: {resp.get("error", "unknown error")}',
+    #     )
     
     all_peers = session.query(models.PeerInfoDB).all()
     bgp_info = []
