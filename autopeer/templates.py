@@ -89,10 +89,10 @@ bgpd_listener = Template(
     source="""\
 {% for peer in peers %}
 {% if peer.use_ll_ip4 %}
-listen on {{ peer.peer_ll_ip4 }} port 179
+listen on {{ peer.our_ll_ip4 }} port 179
 {% endif %}
 {% if peer.use_ll_ip6 %}
-listen on {{ peer.peer_ll_ip6 }}%wg{{ peer.wg_interface }} port 179
+listen on {{ peer.our_ll_ip6 }}%wg{{ peer.wg_interface }} port 179
 {% endif %}
 {% endfor %}
 """,
