@@ -16,6 +16,9 @@ from sqlalchemy.orm import Session
 from autopeer import (
     DN42_SUBNET4,
     DN42_SUBNET6,
+    LL_SUBNET4,
+    LL_SUBNET6,
+    MAX_IP_TRIES,
     cache,
     max_bytes,
     models,
@@ -25,7 +28,7 @@ from autopeer import (
 )
 from autopeer.logger import logger
 from autopeer.middleware import GPGMiddleware, TokenMiddleware
-from autopeer.utils import Peer, Wireguard
+from autopeer.utils import Peer, Wireguard, random_ip4, random_ip6
 
 scheduler = AsyncIOScheduler()
 
@@ -51,6 +54,7 @@ def git_update():
 
 app = FastAPI(lifespan=lifespan)
 app.add_middleware(GPGMiddleware, settings=settings)
+# TODO: change to skip_paths
 app.add_middleware(TokenMiddleware, check_paths=["/create", "/delete", "/info"])
 
 app.state.sock = sp[1]
@@ -96,7 +100,7 @@ def get_db():
 
 @app.post("/login")
 async def autopeer_login(
-    peer_info: schemas.PeerInfo, session: Session = Depends(get_db)
+    peer_info: schemas.PeerInfo
 ):
     """
     Login to the autopeering service.
@@ -115,21 +119,24 @@ async def autopeer_get(peer_info: schemas.PeerInfo, session: Session = Depends(g
     peer_info_internal = (
         session.query(models.PeerInfoDB)
         .filter(models.PeerInfoDB.ASN == peer_info.ASN)
-        .first()
+        .one_or_none()
     )
     if not peer_info_internal:
         return {"message": f"No peer found with ASN {peer_info.ASN}"}
     logger.debug(f"Peer info: {peer_info_internal}")
+    # TODO: pydantify this
     peer_info_sanitized = {
         "ASN": peer_info_internal.ASN,
         "PEER_IP": peer_info_internal.peer_ip,
         "PEER_PORT": peer_info_internal.peer_port,
         "PEER_PUBKEY": peer_info_internal.peer_pubkey,
         "PEER_PSK": peer_info_internal.peer_psk,
-        "LINKLOCAL_IP4": peer_info_internal.ll_ip4,
-        "LINKLOCAL_IP6": peer_info_internal.ll_ip6,
-        "DN42_IP4": peer_info_internal.dn42_ip4,
-        "DN42_IP6": peer_info_internal.dn42_ip6,
+        "PEER_LL_IP4": peer_info_internal.peer_ll_ip4,
+        "PEER_LL_IP6": peer_info_internal.peer_ll_ip6,
+        "PEER_DN42_IP4": peer_info_internal.dn42_ip4,
+        "PEER_DN42_IP6": peer_info_internal.dn42_ip6,
+        "LINKLOCAL_IP4": peer_info_internal.our_ll_ip4,
+        "LINKLOCAL_IP6": peer_info_internal.our_ll_ip6,
     }
     return {"peer_info": json.dumps(peer_info_sanitized)}
 
@@ -154,10 +161,53 @@ async def autopeer_create(
         new_wgid = Peer.new_wgid(session)
         new_wgkey = Wireguard.generate_privkey()
 
-        # TODO: add code to validate and generate link local IPs if not provided
+        if not peer_info.suggest_ll_ip4:
+            peer_info.suggest_ll_ip4 = random_ip4(LL_SUBNET4)
+        for i in range(MAX_IP_TRIES):
+            used_by_us = session.query(models.PeerInfoDB).filter(
+                models.PeerInfoDB.our_ll_ip4 == peer_info.suggest_ll_ip4
+            ).one_or_none()
+            used_by_others = session.query(models.PeerInfoDB).filter(
+                models.PeerInfoDB.peer_ll_ip4 == peer_info.suggest_ll_ip4
+            ).one_or_none()
+            if used_by_us or used_by_others:
+                logger.error(
+                    f"Link local IPv4 address {peer_info.suggest_ll_ip4} already in use"
+                )
+                # we generate a new one
+                peer_info.suggest_ll_ip4 = random_ip4(LL_SUBNET4)
+                continue
+            break
+        else:
+            raise HTTPException(
+                status_code=500,
+                detail="Could not generate unique link local IPv4 address"
+            )
+        if not peer_info.suggest_ll_ip6:
+            peer_info.suggest_ll_ip6 = random_ip6(LL_SUBNET6)
+        for i in range(MAX_IP_TRIES):
+            used_by_us = session.query(models.PeerInfoDB).filter(
+                models.PeerInfoDB.our_ll_ip6 == peer_info.suggest_ll_ip6
+            ).one_or_none()
+            used_by_others = session.query(models.PeerInfoDB).filter(
+                models.PeerInfoDB.peer_ll_ip6 == peer_info.suggest_ll_ip6
+            ).one_or_none()
+            if used_by_us or used_by_others:
+                logger.error(
+                    f"Link local IPv6 address {peer_info.suggest_ll_ip6} already in use"
+                )
+                # we generate a new one
+                peer_info.suggest_ll_ip6 = random_ip6(LL_SUBNET6)
+                continue
+            break
+        else:
+            raise HTTPException(
+                status_code=500,
+                detail="Could not generate unique link local IPv6 address"
+            )
 
         # convert peer_info to PeerInfoDB
-        peer_info_db = models.PeerInfoDB(
+        peer_info_internal = models.PeerInfoDB(
             ASN=peer_info.ASN,
             wg_id=new_wgid,
             wg_privkey=new_wgkey,
@@ -180,14 +230,13 @@ async def autopeer_create(
         )
 
         # add or update peer info
-        session.merge(peer_info_db)
+        session.add(peer_info_internal)
         session.commit()
-
-        peer_info_internal = Peer.get(session, peer_info.ASN)
 
     # TODO: remove later
     del peer_info
 
+    # TODO: move this to a separate function
     wg_create_info = {
         "ASN": peer_info_internal.ASN,
         "description": peer_info_internal.description,
@@ -306,8 +355,6 @@ async def autopeer_delete(
         )
     logger.info(f"ASN {peer_info_internal.ASN} wireguard deleted")
 
-    # TODO: regenerate BGP configuration
-
     session.delete(peer_info_internal)
     session.commit()
 
@@ -346,4 +393,4 @@ async def autopeer_delete(
             status_code=500,
             detail=f'Error updating BGP configuration: {resp.get("error", "unknown error")}',
         )
-    return {"success": True, "message": f"ASN {peer_info_internal.ASN} created"}
+    return {"success": True, "message": f"ASN {peer_info_internal.ASN} deleted"}

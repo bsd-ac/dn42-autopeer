@@ -12,6 +12,8 @@ settings: Settings = Settings()
 
 WG_KEYLEN = 44
 
+MAX_IP_TRIES = 10
+
 DN42_SUBNET4 = ipaddress.IPv4Network("172.20.0.0/14")
 DN42_SUBNET6 = ipaddress.IPv6Network("fd00::/8")
 

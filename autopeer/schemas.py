@@ -3,7 +3,7 @@ import ipaddress
 from typing import Optional
 
 from fastapi import HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator, root_validator
 
 from autopeer import LL_SUBNET4, LL_SUBNET6, DN42_SUBNET4, DN42_SUBNET6
 
@@ -43,7 +43,11 @@ class PeerInfo(BaseModel):
     mp_bgp: bool = False
     extended_next_hop: bool = False
 
+    # TODO: hook up to model validator
+    #       needs to refactor the /info endpoint to use a separate schema as this is too much
     def dn42_validate(self):
+        # TODO: don't raise HTTP exceptions, raise validation errors/assertion error/value errors
+        # TODO: maybe create custom base exception class for our shit
         if not self.description:
             self.description = f"Peer_{self.ASN}"
 
@@ -103,3 +107,10 @@ class PeerInfo(BaseModel):
             raise HTTPException(
                 status_code=400, detail=f"Public key is not a valid base64: {e}"
             )
+        if self.peer_psk:
+            try:
+                psk_bytes = base64.b64decode(self.peer_psk)
+            except Exception as e:
+                raise HTTPException(
+                    status_code=400, detail=f"Pre-shared key is not a valid base64: {e}"
+                )
