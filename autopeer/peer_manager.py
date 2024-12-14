@@ -199,8 +199,8 @@ class PeerManager:
             success = False
             error = str(e)
         finally:
-            os.unlink(bgpd_macros_tmp)
-            os.unlink(bgpd_group_tmp)
+            os.unlink(bgpd_macros_file_tmp)
+            os.unlink(bgpd_group_file_tmp)
         
         return {"success": success, "error": error}
 
