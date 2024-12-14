@@ -149,10 +149,10 @@ class PeerManager:
             peers = info["peers"] # multiple peers
             logger.debug("Updating BGP: %s", peers)
 
-            bgpd_macros = "/etc/bgpd.d/dn42-macros.conf"
-            bgpd_macros_tmp = "/etc/bgpd.d/dn42-macros.conf.tmp"
-            bgpd_group = "/etc/bgpd.d/dn42-group.conf"
-            bgpd_group_tmp = "/etc/bgpd.d/dn42-group.conf.tmp"
+            bgpd_macros_file = "/etc/bgpd.d/dn42-macros.conf"
+            bgpd_macros_file_tmp = "/etc/bgpd.d/dn42-macros.conf.tmp"
+            bgpd_group_file = "/etc/bgpd.d/dn42-group.conf"
+            bgpd_group_file_tmp = "/etc/bgpd.d/dn42-group.conf.tmp"
 
             logger.debug("Creating BGP config files")
             if not os.path.isdir("/etc/bgpd.d"):
@@ -164,17 +164,17 @@ class PeerManager:
 
             logger.debug("Rendering BGP macros file")
             bgpd_macros_data = bgpd_macros.render(peers=peers)
-            with open(bgpd_macros_tmp, "w") as f:
+            with open(bgpd_macros_file_tmp, "w") as f:
                 f.write(bgpd_macros_data)
             logger.debug("Swapping BGP macros files")
-            mvswap_files(bgpd_macros, bgpd_macros_tmp)
+            mvswap_files(bgpd_macros_file, bgpd_macros_file_tmp)
 
             logger.debug("Rendering BGP group file")
             bgpd_group_data = bgpd_group.render(peers=peers)
-            with open(bgpd_group_tmp, "w") as f:
+            with open(bgpd_group_file_tmp, "w") as f:
                 f.write(bgpd_group_data)
             logger.debug("Swapping BGP group files")
-            mvswap_files(bgpd_group, bgpd_group_tmp)
+            mvswap_files(bgpd_group_file, bgpd_group_file_tmp)
 
             # test the config
             sp = subprocess.run(
@@ -182,8 +182,8 @@ class PeerManager:
             )
             if sp.returncode:
                 logger.error(f"Failed to test bgpd config: {sp.stderr.decode()}")
-                mvswap_files(bgpd_macros_tmp, bgpd_macros)
-                mvswap_files(bgpd_group_tmp, bgpd_group)
+                mvswap_files(bgpd_macros_file, bgpd_macros_file_tmp)
+                mvswap_files(bgpd_group_file, bgpd_group_file_tmp)
                 raise RuntimeError("Failed to test bgpd config")
             # reload bgpd
             sp = subprocess.run(
