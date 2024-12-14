@@ -110,33 +110,22 @@ async def autopeer_login(peer_info: schemas.PeerInfo):
 
 
 @app.post("/info")
-async def autopeer_get(peer_info: schemas.PeerInfo, session: Session = Depends(get_db)):
+async def autopeer_get(peer: schemas.PeerASN, session: Session = Depends(get_db)):
     """
     Get peering information for given ASN.
     """
     peer_info_internal = (
         session.query(models.PeerInfoDB)
-        .filter(models.PeerInfoDB.ASN == peer_info.ASN)
+        .filter(models.PeerInfoDB.ASN == peer.ASN)
         .one_or_none()
     )
     if not peer_info_internal:
-        return {"message": f"No peer found with ASN {peer_info.ASN}"}
+        return {"message": f"No peer found with ASN {peer.ASN}"}
+
+    del peer
+
     logger.debug(f"Peer info: {peer_info_internal}")
-    # TODO: pydantify this
-    peer_info_sanitized = {
-        "ASN": peer_info_internal.ASN,
-        "PEER_IP": peer_info_internal.peer_ip,
-        "PEER_PORT": peer_info_internal.peer_port,
-        "PEER_PUBKEY": peer_info_internal.peer_pubkey,
-        "PEER_PSK": peer_info_internal.peer_psk,
-        "PEER_LL_IP4": peer_info_internal.peer_ll_ip4,
-        "PEER_LL_IP6": peer_info_internal.peer_ll_ip6,
-        "PEER_DN42_IP4": peer_info_internal.dn42_ip4,
-        "PEER_DN42_IP6": peer_info_internal.dn42_ip6,
-        "LINKLOCAL_IP4": peer_info_internal.our_ll_ip4,
-        "LINKLOCAL_IP6": peer_info_internal.our_ll_ip6,
-    }
-    return {"peer_info": peer_info_sanitized}
+    return {"peer_info": peer_info_internal.sanitize()}
 
 
 @app.post("/create")
@@ -235,45 +224,13 @@ async def autopeer_create(
             extended_next_hop=peer_info.extended_next_hop,
         )
 
-        # add or update peer info
         session.add(peer_info_internal)
         session.commit()
 
     # TODO: remove later
     del peer_info
 
-    # TODO: move this to a separate function
-    wg_create_info = {
-        "ASN": peer_info_internal.ASN,
-        "description": peer_info_internal.description,
-        "wg_id": peer_info_internal.wg_id,
-        "wg_rdomain": settings.wg_rdomain,
-        "wg_interface": settings.wg_base_interface + peer_info_internal.wg_id,
-        "wg_mtu": settings.wg_mtu,
-        "wg_privkey": peer_info_internal.wg_privkey,
-        "wg_port": peer_info_internal.wg_port,
-        "peer_ip": peer_info_internal.peer_ip,
-        "peer_port": peer_info_internal.peer_port,
-        "peer_pubkey": peer_info_internal.peer_pubkey,
-        "peer_psk": peer_info_internal.peer_psk,
-        "peer_ll_ip4": (
-            peer_info_internal.peer_ll_ip4
-            if peer_info_internal.use_ll_ip4
-            else peer_info_internal.dn42_ip4
-        ),
-        "peer_ll_ip6": (
-            peer_info_internal.peer_ll_ip6
-            if peer_info_internal.use_ll_ip6
-            else peer_info_internal.dn42_ip6
-        ),
-        "our_ll_ip4": peer_info_internal.our_ll_ip4,
-        "our_ll_ip6": peer_info_internal.our_ll_ip6,
-        "dn42_netspace4": f"{DN42_SUBNET4}",
-        "dn42_netspace6": f"{DN42_SUBNET6}",
-    }
-
-    # remove None values
-    wg_create_info = {k: v for k, v in wg_create_info.items() if v is not None}
+    wg_create_info = peer_info_internal.wg_info()
 
     logger.debug(f"Creating peer: {wg_create_info}")
 
@@ -289,24 +246,7 @@ async def autopeer_create(
         )
 
     all_peers = session.query(models.PeerInfoDB).all()
-    bgp_info = []
-    for peer_info_internal in all_peers:
-        tmp_info = {
-            "ASN": peer_info_internal.ASN,
-            "description": peer_info_internal.description,
-            "wg_id": peer_info_internal.wg_id,
-            "wg_interface": settings.wg_base_interface + peer_info_internal.wg_id,
-            "peer_ll_ip4": peer_info_internal.peer_ll_ip4,
-            "peer_ll_ip6": peer_info_internal.peer_ll_ip6,
-            "our_ll_ip4": peer_info_internal.our_ll_ip4,
-            "our_ll_ip6": peer_info_internal.our_ll_ip6,
-            "dn42_ip4": peer_info_internal.dn42_ip4,
-            "dn42_ip6": peer_info_internal.dn42_ip6,
-            "use_ll_ip4": peer_info_internal.use_ll_ip4,
-            "use_ll_ip6": peer_info_internal.use_ll_ip6,
-        }
-        tmp_info = {k: v for k, v in tmp_info.items() if v is not None}
-        bgp_info.append(tmp_info)
+    bgp_info = list(map(lambda x: x.bgp_info(), all_peers))
 
     jinfo = {
         "command": "bgp_update",
@@ -328,21 +268,21 @@ async def autopeer_create(
 
 @app.delete("/delete")
 async def autopeer_delete(
-    peer_info: schemas.PeerInfo, session: Session = Depends(get_db)
+    peer: schemas.PeerASN, session: Session = Depends(get_db)
 ):
     """
     Delete peering session with the given ASN.
     """
-    logger.debug(f"Peer info: {peer_info}")
+    logger.debug(f"Peer info: {peer}")
 
-    logger.debug(f"Checking if peer exists: {peer_info.ASN}")
+    logger.debug(f"Checking if peer exists: {peer.ASN}")
     try:
-        peer_info_internal = Peer.get(session, peer_info.ASN)
+        peer_info_internal = Peer.get(session, peer.ASN)
     except KeyError:
-        return {"message": f"No peer found with ASN {peer_info.ASN}"}
+        return {"message": f"No peer found with ASN {peer.ASN}"}
 
     # TODO: remove later
-    del peer_info
+    del peer
 
     wg_delete_info = {
         "ASN": peer_info_internal.ASN,
@@ -365,24 +305,7 @@ async def autopeer_delete(
     session.commit()
 
     all_peers = session.query(models.PeerInfoDB).all()
-    bgp_info = []
-    for peer_info_internal in all_peers:
-        tmp_info = {
-            "ASN": peer_info_internal.ASN,
-            "description": peer_info_internal.description,
-            "wg_id": peer_info_internal.wg_id,
-            "wg_interface": settings.wg_base_interface + peer_info_internal.wg_id,
-            "peer_ll_ip4": peer_info_internal.peer_ll_ip4,
-            "peer_ll_ip6": peer_info_internal.peer_ll_ip6,
-            "our_ll_ip4": peer_info_internal.our_ll_ip4,
-            "our_ll_ip6": peer_info_internal.our_ll_ip6,
-            "dn42_ip4": peer_info_internal.dn42_ip4,
-            "dn42_ip6": peer_info_internal.dn42_ip6,
-            "use_ll_ip4": peer_info_internal.use_ll_ip4,
-            "use_ll_ip6": peer_info_internal.use_ll_ip6,
-        }
-        tmp_info = {k: v for k, v in tmp_info.items() if v is not None}
-        bgp_info.append(tmp_info)
+    bgp_info = list(map(lambda x: x.bgp_info(), all_peers))
 
     jinfo = {
         "command": "bgp_update",

@@ -20,6 +20,9 @@ def ip_validate(ip: str, network: ipaddress.IPv4Network):
         )
 
 
+class PeerASN(BaseModel):
+    ASN: int
+
 class PeerInfo(BaseModel):
     ASN: int
     description: Optional[str] = None
@@ -43,11 +46,9 @@ class PeerInfo(BaseModel):
     mp_bgp: bool = False
     extended_next_hop: bool = False
 
-    # TODO: hook up to model validator
-    #       needs to refactor the /info endpoint to use a separate schema as this is too much
+
+    @model_validator(pre=True)
     def dn42_validate(self):
-        # TODO: don't raise HTTP exceptions, raise validation errors/assertion error/value errors
-        # TODO: maybe create custom base exception class for our shit
         if not self.description:
             self.description = f"Peer_{self.ASN}"
 
