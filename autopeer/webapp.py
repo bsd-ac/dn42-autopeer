@@ -142,9 +142,6 @@ async def autopeer_create(
         peer_info_internal = Peer.get(session, peer_info.ASN)
         return {"message": f"Peer with ASN {peer_info_internal.ASN} already exists"}
     except KeyError:
-        # validate that peer information is valid
-        peer_info.dn42_validate()
-
         new_wgid = Peer.new_wgid(session)
         new_wgkey = Wireguard.generate_privkey()
 
