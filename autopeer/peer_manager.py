@@ -159,7 +159,7 @@ class PeerManager:
                 os.mkdir("/etc/bgpd.d")
 
             logger.debug("Ensuring original files exist")
-            for f in [bgpd_macros, bgpd_group]:
+            for f in [bgpd_macros_file, bgpd_group_file]:
                 Path(f).touch()
 
             logger.debug("Rendering BGP macros file")
