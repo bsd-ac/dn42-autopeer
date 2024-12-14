@@ -18,6 +18,8 @@ class Settings:
         self._database = os.path.join(config.get("db_dir"), "peers.db")
         self._db_engine = db.create_engine(f"sqlite:///{self.database}")
         self._ADMIN_ASN = config.get("ADMIN_ASN")
+        self._router_ip4 = config.get("router_ip4")
+        self._router_ip6 = config.get("router_ip6")
         self._wg_base_port = config.get("wg_base_port", 2100)
         self._wg_base_interface = config.get("wg_base_interface", 100)
         self._wg_rdomain = config.get("wg_rdomain", 42)
@@ -91,3 +93,15 @@ class Settings:
         if not self._initialized:
             raise ValueError("Settings not initialized")
         return self._session
+
+    @property
+    def router_ip4(self):
+        if not self._initialized:
+            raise ValueError("Settings not initialized")
+        return self._router_ip4
+    
+    @property
+    def router_ip6(self):
+        if not self._initialized:
+            raise ValueError("Settings not initialized")
+        return self._router_ip6

@@ -12,7 +12,7 @@ from fastapi import HTTPException
 from autopeer import max_bytes
 from autopeer.logger import logger
 from autopeer.schemas import PeerInfo
-from autopeer.templates import bgpd_group, bgpd_macros, hostname_wg
+from autopeer.templates import bgpd_group, bgpd_listener, bgpd_macros, hostname_wg
 from autopeer.utils import mvswap_files
 
 
@@ -147,12 +147,16 @@ class PeerManager:
         error = None
         try:
             peers = info["peers"] # multiple peers
+            router_ip4 = info["router_ip4"]
+            router_ip6 = info["router_ip6"]
             logger.debug("Updating BGP: %s", peers)
 
             bgpd_macros_file = "/etc/bgpd.d/dn42-macros.conf"
             bgpd_macros_file_tmp = "/etc/bgpd.d/dn42-macros.conf.tmp"
             bgpd_group_file = "/etc/bgpd.d/dn42-group.conf"
             bgpd_group_file_tmp = "/etc/bgpd.d/dn42-group.conf.tmp"
+            bgpd_listener_file = "/etc/bgpd.d/dn42-listener.conf"
+            bgpd_listener_file_tmp = "/etc/bgpd.d/dn42-listener.conf.tmp"
 
             logger.debug("Creating BGP config files")
             if not os.path.isdir("/etc/bgpd.d"):
@@ -163,7 +167,7 @@ class PeerManager:
                 Path(f).touch()
 
             logger.debug("Rendering BGP macros file")
-            bgpd_macros_data = bgpd_macros.render(peers=peers)
+            bgpd_macros_data = bgpd_macros.render(peers=peers, router_ip4=router_ip4, router_ip6=router_ip6)
             logger.debug(f"bgpd_macros_data: {bgpd_macros_data}")
             with open(bgpd_macros_file_tmp, "w") as f:
                 f.write(bgpd_macros_data)
@@ -171,12 +175,20 @@ class PeerManager:
             mvswap_files(bgpd_macros_file, bgpd_macros_file_tmp)
 
             logger.debug("Rendering BGP group file")
-            bgpd_group_data = bgpd_group.render(peers=peers)
+            bgpd_group_data = bgpd_group.render(peers=peers, router_ip4=router_ip4, router_ip6=router_ip6)
             logger.debug(f"bgpd_group_data: {bgpd_group_data}")
             with open(bgpd_group_file_tmp, "w") as f:
                 f.write(bgpd_group_data)
             logger.debug("Swapping BGP group files")
             mvswap_files(bgpd_group_file, bgpd_group_file_tmp)
+
+            logger.debug("Rendering BGP listener file")
+            bgpd_listener_data = bgpd_listener.render(peers=peers, router_ip4=router_ip4, router_ip6=router_ip6)
+            logger.debug(f"bgpd_listener_data: {bgpd_listener_data}")
+            with open(bgpd_listener_file_tmp, "w") as f:
+                f.write(bgpd_listener_data)
+            logger.debug("Swapping BGP listener files")
+            mvswap_files(bgpd_listener_file, bgpd_listener_file_tmp)
 
             # test the config
             sp = subprocess.run(
@@ -186,6 +198,7 @@ class PeerManager:
                 logger.error(f"Failed to test bgpd config: {sp.stderr.decode()}")
                 mvswap_files(bgpd_macros_file, bgpd_macros_file_tmp)
                 mvswap_files(bgpd_group_file, bgpd_group_file_tmp)
+                mvswap_files(bgpd_listener_file, bgpd_listener_file_tmp)
                 raise RuntimeError("Failed to test bgpd config")
             # reload bgpd
             sp = subprocess.run(
@@ -205,6 +218,8 @@ class PeerManager:
                 os.unlink(bgpd_macros_file_tmp)
             if os.path.isfile(bgpd_group_file_tmp):
                 os.unlink(bgpd_group_file_tmp)
+            if os.path.isfile(bgpd_listener_file_tmp):
+                os.unlink(bgpd_listener_file_tmp)
         
         return {"success": success, "error": error}
 

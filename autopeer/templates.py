@@ -60,6 +60,11 @@ group "dn42_peers" {
                 remote-as $P{{ loop.index }}_asn
                 descr $P{{ loop.index }}_descr4
                 set nexthop $P{{ loop.index }}_remote4
+{% if peer.use_ll_ip4 %}
+                local-address {{ peer.peer_ll_ip4 }}
+{% else %}
+                local-address {{ router_ip4 }}
+{% endif %}
         }
 {% endif %}
 {% if peer.peer_ll_ip6 is defined or peer.dn42_ip6 is defined %}
@@ -67,9 +72,27 @@ group "dn42_peers" {
                 remote-as $P{{ loop.index }}_asn
                 descr $P{{ loop.index }}_descr6
                 set nexthop $P{{ loop.index }}_remote6
+{% if peer.use_ll_ip6 %}
+                local-address {{ peer.peer_ll_ip6 }}%{{ wg_interface }}
+{% else %}
+                local-address {{ router_ip6 }}
+{% endif %}
         }
 {% endif %}
 {% endfor %}
 }
 """,
+)
+
+bgpd_listener = Template(
+    undefined=StrictUndefined,
+    source="""\
+{% for peer in peers %}
+{% if peer.use_ll_ip4 %}
+listen on {{ peer.peer_ll_ip4 }} port 179
+{% else %}
+{% if peer.use_ll_ip6 %}
+listen on {{ peer.peer_ll_ip6 }}%{{ wg_interface }} port 179
+{% else %}
+"""
 )

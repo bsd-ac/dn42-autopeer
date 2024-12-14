@@ -245,7 +245,7 @@ async def autopeer_create(
         tmp_info = {k: v for k, v in tmp_info.items() if v is not None}
         bgp_info.append(tmp_info)
 
-    jinfo = {"command": "bgp_update", "peers": bgp_info}
+    jinfo = {"command": "bgp_update", "peers": bgp_info, "router_ip4": settings.router_ip4, "router_ip6": settings.router_ip6}
     pm_send(app.state.sock, jinfo)
     resp = pm_recv(app.state.sock)
 
