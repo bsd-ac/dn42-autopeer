@@ -30,13 +30,18 @@ bgpd_macros = Template(
     undefined=StrictUndefined,
     source="""\
 {% for peer in peers %}
-P{{ loop.index }}_descr="{{ peer.description }}"
-{% if peer.dn42_ip4 is defined %}
+P{{ loop.index }}_descr4="{{ peer.description }}_P4"
+P{{ loop.index }}_descr6="{{ peer.description }}_P6"
+{% if peer.use_ll_ip4 and peer.peer_ll_ip4 is defined %}
+P{{ loop.index }}_remote4="{{ peer.peer_ll_ip4 }}"
+{% elif peer.dn42_ip4 is defined %}
 P{{ loop.index }}_remote4="{{ peer.dn42_ip4 }}"
-{% endif %}
-{% if peer.dn42_ip6 is defined %}
+{% endif -%}
+{% if peer.use_ll_ip6 and peer.peer_ll_ip6 is defined %}
+P{{ loop.index }}_remote6="{{ peer.peer_ll_ip6 }}"
+{% elif peer.dn42_ip6 is defined %}
 P{{ loop.index }}_remote6="{{ peer.dn42_ip6 }}"
-{% endif %}
+{% endif -%}
 P{{ loop.index }}_asn="{{ peer.ASN }}"
 
 {% endfor %}
@@ -50,20 +55,20 @@ group "dn42_peers" {
         announce IPv4 unicast
         announce IPv6 unicast
 {% for peer in peers %}
-{% if peer.ip4 is defined %}
+{% if peer.peer_ll_ip4 is defined or peer.dn42_ip4 is defined %}
         neighbor $P{{ loop.index }}_remote4 {
                 remote-as $P{{ loop.index }}_asn
-                descr $P{{ loop.index }}_descr
+                descr $P{{ loop.index }}_descr4
                 set nexthop $P{{ loop.index }}_remote4
         }
-{% endif %}
-{% if peer.ip6 is defined %}
+{% endif -%}
+{% if peer.peer_ll_ip6 is defined or peer.dn42_ip6 is defined %}
         neighbor $P{{ loop.index }}_remote6 {
                 remote-as $P{{ loop.index }}_asn
-                descr $P{{ loop.index }}_descr
+                descr $P{{ loop.index }}_descr6
                 set nexthop $P{{ loop.index }}_remote6
         }
-{% endif %}
+{% endif -%}
 {% endfor %}
 }
 """,
