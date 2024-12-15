@@ -23,6 +23,7 @@ def ip_validate(ip: str, network: ipaddress.IPv4Network):
 class PeerASN(BaseModel):
     ASN: int
 
+
 class PeerInfo(BaseModel):
     ASN: int
     description: Optional[str] = None
@@ -45,7 +46,6 @@ class PeerInfo(BaseModel):
 
     mp_bgp: bool = False
     extended_next_hop: bool = False
-
 
     @model_validator(mode="after")
     def dn42_validate(self):

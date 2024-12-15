@@ -264,9 +264,7 @@ async def autopeer_create(
 
 
 @app.delete("/delete")
-async def autopeer_delete(
-    peer: schemas.PeerASN, session: Session = Depends(get_db)
-):
+async def autopeer_delete(peer: schemas.PeerASN, session: Session = Depends(get_db)):
     """
     Delete peering session with the given ASN.
     """

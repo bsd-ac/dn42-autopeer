@@ -75,16 +75,8 @@ class PeerInfoDB(Base):
             "peer_port": self.peer_port,
             "peer_pubkey": self.peer_pubkey,
             "peer_psk": self.peer_psk,
-            "peer_ll_ip4": (
-                self.peer_ll_ip4
-                if self.use_ll_ip4
-                else self.dn42_ip4
-            ),
-            "peer_ll_ip6": (
-                self.peer_ll_ip6
-                if self.use_ll_ip6
-                else self.dn42_ip6
-            ),
+            "peer_ll_ip4": (self.peer_ll_ip4 if self.use_ll_ip4 else self.dn42_ip4),
+            "peer_ll_ip6": (self.peer_ll_ip6 if self.use_ll_ip6 else self.dn42_ip6),
             "our_ll_ip4": self.our_ll_ip4,
             "our_ll_ip6": self.our_ll_ip6,
             "dn42_netspace4": f"{DN42_SUBNET4}",
@@ -94,7 +86,7 @@ class PeerInfoDB(Base):
         return model_info
 
     def bgp_info(self) -> dict:
-        model_info =  {
+        model_info = {
             "ASN": self.ASN,
             "description": self.description,
             "wg_id": self.wg_id,
