@@ -11,7 +11,7 @@ from fastapi import HTTPException
 from starlette.requests import Request
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
-from autopeer import cache, settings
+from autopeer import gpg_cache, token_cache, settings
 from autopeer.logger import logger
 from autopeer.settings import Settings
 from autopeer.utils import DN42
@@ -115,11 +115,24 @@ class GPGMiddleware:
         logger.debug(f"PGP fingerprint: {pgp_fingerprint}")
 
         # get the public key of the ASN
-        # only searches for the key using WKD and local keyring
-        logger.debug("Getting public key")
-        sp = subprocess.run(["gpg", "--locate-keys", mail])
+        # by default only searches for the key using WKD and local keyring
+        if gpg_cache.get(mail) is None:
+            gpg_cache[mail] = 1
+            logger.info(f"Getting public key for: {mail}")
+            gpg_fetch = ["gpg", "--locate-external-keys", mail]
+            if settings.gpg_options:
+                gpg_fetch = ["gpg"] + settings.gpg_options + ["--locate-external-keys", mail]
+            sp = subprocess.run(gpg_fetch, capture_output=True)
+            if sp.returncode != 0:
+                logger.warning(f"Error getting public key for: {mail}")
+                logger.debug(f"Error: {sp.stderr}")
+                logger.debug(f"Output: {sp.stdout}")
+                raise HTTPException(
+                    status_code=400, detail=f"Error getting public key for: {mail}"
+                )
+        sp = subprocess.run(["gpg", "--list-keys", mail])
         if sp.returncode != 0:
-            logger.warning(f"Error getting public key for: {mail}")
+            logger.warning(f"We don't have a public key for: {mail}")
 
         try:
             with tempfile.NamedTemporaryFile() as tmpfile:
@@ -227,7 +240,7 @@ class TokenMiddleware:
 
         # check that token is valid
         try:
-            if cache[ASN] != token:
+            if token_cache[ASN] != token:
                 raise HTTPException(status_code=401, detail="Token is invalid")
         except KeyError:
             raise HTTPException(status_code=401, detail="ASN is not logged in")

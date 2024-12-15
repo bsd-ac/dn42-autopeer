@@ -19,7 +19,7 @@ from autopeer import (
     LL_SUBNET4,
     LL_SUBNET6,
     MAX_IP_TRIES,
-    cache,
+    token_cache,
     max_bytes,
     models,
     schemas,
@@ -105,7 +105,7 @@ async def autopeer_login(peer: schemas.PeerASN):
     Creates a new session token that is valid for one minute.
     """
     token = uuid.uuid4()
-    cache[peer.ASN] = f"{token}"
+    token_cache[peer.ASN] = f"{token}"
     return {"token": f"{token}"}
 
 

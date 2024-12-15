@@ -24,6 +24,7 @@ class Settings:
         self._wg_base_interface = config.get("wg_base_interface", 100)
         self._wg_rdomain = config.get("wg_rdomain", 42)
         self._wg_mtu = config.get("wg_mtu", 1420)
+        self._gpg_options = config.get("gpg_options", [])
         self._session = sessionmaker(
             autocommit=False, autoflush=False, bind=self.db_engine
         )
@@ -105,3 +106,9 @@ class Settings:
         if not self._initialized:
             raise ValueError("Settings not initialized")
         return self._router_ip6
+
+    @property
+    def gpg_options(self):
+        if not self._initialized:
+            raise ValueError("Settings not initialized")
+        return self._gpg_options
