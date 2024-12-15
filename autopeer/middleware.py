@@ -119,9 +119,7 @@ class GPGMiddleware:
         if gpg_cache.get(mail) is None:
             gpg_cache[mail] = 1
             logger.info(f"Getting public key for: {mail}")
-            gpg_fetch = ["gpg", "--locate-external-keys", mail]
-            if settings.gpg_options:
-                gpg_fetch = ["gpg"] + settings.gpg_options + ["--locate-external-keys", mail]
+            gpg_fetch = ["gpg"] + settings.gpg_options + ["--locate-external-keys", mail]
             sp = subprocess.run(gpg_fetch, capture_output=True)
             if sp.returncode != 0:
                 logger.warning(f"Error getting public key for: {mail}")
